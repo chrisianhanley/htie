@@ -1,0 +1,52 @@
+{
+  "basemap": {
+    "name": "just intonation wolf fifth",
+    "intervals": {
+      "0": "1:1",
+      "1": "16:15",
+      "2": "9:8",
+      "3": "6:5",
+      "4": "5:4",
+      "5": "4:3",
+      "6": "64:45",
+      "7": "1024:675",
+      "8": "8:5",
+      "9": "5:3",
+      "10": "9:5",
+      "11": "15:8"
+    }
+  },
+  
+  "notemaps": {
+    "4": {
+      "name": "undecimal neutral third",
+      "intervals": {
+        "3": "11:9",
+        "4": "11:9"
+      }
+    },
+
+    "3": {
+      "name": "subminor third",
+      "intervals": {
+        "3": "7:6",
+        "4": "7:6"
+      }
+    },
+    
+    "5": {
+      "name": "septimal major third",
+      "intervals": {
+        "3": "50:39",
+        "4": "50:39"
+      }
+    },
+    
+    "2": {
+      "name": "suspended",
+      "intervals": {
+        "4": 503.22
+      }
+    }
+  }
+}

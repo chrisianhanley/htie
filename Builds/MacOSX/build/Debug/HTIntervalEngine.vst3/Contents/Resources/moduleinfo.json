@@ -1,0 +1,48 @@
+{
+  "Name": "HTIntervalEngine",
+  "Version": "1.0.0-beta.7",
+  "Factory Info": {
+    "Vendor": "Ian Hanley",
+    "URL": "www.IanHanley.com",
+    "E-Mail": "ianhanley100@gmail.com",
+    "Flags": {
+      "Unicode": true,
+      "Classes Discardable": false,
+      "Component Non Discardable": false,
+    },
+  },
+  "Classes": [
+    {
+      "CID": "ABCDEF019182FAEB4D616E7544367331",
+      "Category": "Audio Module Class",
+      "Name": "HTIntervalEngine",
+      "Vendor": "Ian Hanley",
+      "Version": "1.0.0-beta.7",
+      "SDKVersion": "VST 3.8.0",
+      "Sub Categories": [
+        "Instrument",
+        "Synth",
+      ],
+      "Class Flags": 2,
+      "Cardinality": 2147483647,
+      "Snapshots": [
+      ],
+    },
+    {
+      "CID": "ABCDEF011234ABCD4D616E7544367331",
+      "Category": "Component Controller Class",
+      "Name": "HTIntervalEngine",
+      "Vendor": "Ian Hanley",
+      "Version": "1.0.0-beta.7",
+      "SDKVersion": "VST 3.8.0",
+      "Sub Categories": [
+        "Instrument",
+        "Synth",
+      ],
+      "Class Flags": 2,
+      "Cardinality": 2147483647,
+      "Snapshots": [
+      ],
+    },
+  ],
+}
