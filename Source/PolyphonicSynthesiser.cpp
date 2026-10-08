@@ -166,7 +166,7 @@ void PolyphonicSynthesiserVoice::reset()
 {
     clearCurrentNote();
     
-    for (auto o : oscillators) {
+    for (auto& o : oscillators) {
         o.reset();
     }
 }

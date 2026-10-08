@@ -7,11 +7,6 @@ WavetableOscillator::WavetableOscillator(juce::AudioSampleBuffer& table, unsigne
     jassert(wavetable.getNumChannels() == 1);
 }
 
-void WavetableOscillator::setTable(juce::AudioSampleBuffer& table)
-{
-    wavetable = table;
-}
-
 void WavetableOscillator::setFrequency(float hz, float sampleRate)
 {
     float cycle = wavetable.getNumSamples() / cycles;

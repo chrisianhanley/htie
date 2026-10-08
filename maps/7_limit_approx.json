@@ -15,36 +15,5 @@
       "10": 1018,
       "11": 1151.23
     }
-  },
-  
-  "notemaps": {
-      "2": {
-        "name": "neutral third",
-        "intervals": {
-          "3": 348.38,
-          "4": 348.38
-        }
-      },
-      
-      "3": {
-        "name": "subminor third",
-        "intervals": {
-          "3": 270.96
-        }
-      },
-      
-    "4": {
-      "name": "supermajor third",
-      "intervals": {
-        "4": 425.8
-      }
-    },
-    
-    "5": {
-      "name": "suspended",
-      "intervals": {
-        "4": 503.22
-      }
-    }
   }
 }

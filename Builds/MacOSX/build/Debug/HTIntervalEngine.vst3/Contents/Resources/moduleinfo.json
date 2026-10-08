@@ -1,6 +1,6 @@
 {
   "Name": "HTIntervalEngine",
-  "Version": "1.0.0-beta.7",
+  "Version": "1.0.0-beta.8",
   "Factory Info": {
     "Vendor": "Ian Hanley",
     "URL": "www.IanHanley.com",
@@ -17,7 +17,7 @@
       "Category": "Audio Module Class",
       "Name": "HTIntervalEngine",
       "Vendor": "Ian Hanley",
-      "Version": "1.0.0-beta.7",
+      "Version": "1.0.0-beta.8",
       "SDKVersion": "VST 3.8.0",
       "Sub Categories": [
         "Instrument",
@@ -33,7 +33,7 @@
       "Category": "Component Controller Class",
       "Name": "HTIntervalEngine",
       "Vendor": "Ian Hanley",
-      "Version": "1.0.0-beta.7",
+      "Version": "1.0.0-beta.8",
       "SDKVersion": "VST 3.8.0",
       "Sub Categories": [
         "Instrument",

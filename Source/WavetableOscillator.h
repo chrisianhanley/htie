@@ -7,7 +7,6 @@ class WavetableOscillator
 public:
     WavetableOscillator(juce::AudioSampleBuffer& table, unsigned int cycles);
 
-    void setTable(juce::AudioSampleBuffer& table);
     void setFrequency(float frequency, float sampleRate);
     
     float getNextSample() noexcept;

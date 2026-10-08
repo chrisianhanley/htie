@@ -40,11 +40,11 @@ AudioProcessorValueTreeState::ParameterLayout HTIntervalEngineAudioProcessor::cr
 {
     AudioProcessorValueTreeState::ParameterLayout layout;
     
-    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "keyCenter", 2 }, "key", 1, 12, 1));
-    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "rootInputRange", 2 }, "input range", 1, 10, 5));
-    layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "quantizeRoot", 2 }, "quantize", false));
-    layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "pedalRoot", 2 }, "pedal", false));
-    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "wavetableResolution", 2 }, "wavetable res", 1, 6, 5));
+    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "keyCenter", 1 }, "key", 1, 12, 1));
+    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "rootInputRange", 1 }, "input range", 1, 10, 5));
+    layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "quantizeRoot", 1 }, "quantize", false));
+    layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "pedalRoot", 1 }, "pedal", false));
+    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "wavetableResolution", 1 }, "wavetable res", 1, 6, 5));
     layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "toggleNoteMap", 1 }, "toggle nm", true));
     layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "superimpose", 1 }, "superimpose", 1, 12, 12));
     layout.add(make_unique<juce::AudioParameterFloat>(ParameterID { "mix", 1 }, "mix", 0, 1, 0.5f));
@@ -147,9 +147,15 @@ void HTIntervalEngineAudioProcessor::handleIncomingMidiMessage(MidiInput* input,
 
 bool HTIntervalEngineAudioProcessor::noteWithinRange(int noteNumber) {
     auto name = MidiMessage::getMidiNoteName(noteNumber, pitchMapper.USE_SHARPS, true, pitchMapper.OCTAVE_FOR_MIDDLE_C);
-    int range = *parameters.rootInputRangeParameter - 3;
+    auto range = (String) to_string((int) *parameters.rootInputRangeParameter - 3);
+  
+    auto s = name.substring(name.length() - 2, name.length());
+    if (s.contains("-"))
+    {
+        return s.equalsIgnoreCase(range);
+    }
     
-    return name.contains(to_string(range));
+    return name.contains(range);
 }
 
 /*
