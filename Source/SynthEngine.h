@@ -20,6 +20,8 @@ class SynthEngine : public juce::AudioSource
 {
 public:
     SynthEngine(PluginParameters& p, PitchMapper& m);
+    
+    void redrawVoices();
 
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
     void releaseResources() override;
@@ -38,8 +40,8 @@ public:
     float map(int noteNumber, float transposeCents);
     
 private:
-    int pedalNote;
-    int pedalChannel;
+    int pedalNote = 0;
+    int pedalChannel = 0;
     
     PluginParameters& parameters;
     

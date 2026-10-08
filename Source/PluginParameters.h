@@ -8,16 +8,16 @@ class PluginParameters
 public:
     PluginParameters();
     
-    std::atomic<float>* keyCenterParameter;
-    std::atomic<float>* rootInputRangeParameter;
-    std::atomic<float>* quantizeRootParameter;
-    std::atomic<float>* pedalRootParameter;
-    std::atomic<float>* wavetableResolutionParameter;
-    std::atomic<float>* toggleNoteMapParameter;
+    std::atomic<float>* keyCenterParameter = nullptr;
+    std::atomic<float>* rootInputRangeParameter = nullptr;
+    std::atomic<float>* quantizeRootParameter = nullptr;
+    std::atomic<float>* pedalRootParameter = nullptr;
+    std::atomic<float>* wavetableResolutionParameter = nullptr;
+    std::atomic<float>* toggleNoteMapParameter = nullptr;
     
-    std::atomic<float>* superimposeParameter;
-    std::atomic<float>* mixParameter;
-    std::atomic<float>* numVoicesParameter;
+    std::atomic<float>* superimposeParameter = nullptr;
+    std::atomic<float>* mixParameter = nullptr;
+    std::atomic<float>* numVoicesParameter = nullptr;
     
     std::atomic<float> gainValue;
     std::atomic<unsigned int> wavetableResolutionValue;
@@ -25,7 +25,7 @@ public:
     void createReferences(juce::AudioProcessorValueTreeState* state);
     juce::AudioProcessorValueTreeState* getPluginState();
     
-    Mixer getMixer();
+    Mixer& getMixer();
     
 private:
     juce::AudioProcessorValueTreeState* pluginState;

@@ -10,12 +10,6 @@ using namespace juce;
 
 //==============================================================================
 
-const String HTIntervalEngineAudioProcessorEditor::FILE_TEXT_BUFFER_EMPTY = "[empty]";
-
-String HTIntervalEngineAudioProcessorEditor::fileTextAppend = "";
-String HTIntervalEngineAudioProcessorEditor::fileTextBuffer = "";
-String HTIntervalEngineAudioProcessorEditor::fileTextOutput = FILE_TEXT_BUFFER_EMPTY;
-
 HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Processor& p)
 : AudioProcessorEditor(&p), processor(p), keyboardComponent(processor.getKeyboardState(), MidiKeyboardComponent::horizontalKeyboard)
 {
@@ -103,7 +97,6 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     intervalMapButton.setButtonText("<load interval map>");
     fileLoadLabel.setLookAndFeel(&lookAndFeel);
     fileLoadLabel.setFont(CustomFont::ITALIC);
-    fileLoadLabel.setText(fileTextOutput, dontSendNotification);
     
     intervalMapChooser = std::make_unique<FileChooser>("Select interval map to load...", File::getSpecialLocation(File::userHomeDirectory), "*.json");
     
@@ -136,65 +129,40 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
             
             auto last = processor.getPitchMapper().currentIntervalMap;
             
-            if (!last.isEmpty())
+            if (last)
             {
-                fileTextBuffer = "[" + last.baseMap.name + "]";
+                fileTextBuffer = "[" + last->baseMap.name + "]";
             }
             else
             {
-                fileTextBuffer = FILE_TEXT_BUFFER_EMPTY;
+                fileTextBuffer = processor.FILE_TEXT_BUFFER_EMPTY;
             }
             
             if (result == 0)
             {
-                fileTextOutput = reload ? "successfully reloaded " + fileTextBuffer : "successfully loaded " + fileTextBuffer;
+                processor.fileTextOutput = reload ? "successfully reloaded " + fileTextBuffer : "successfully loaded " + fileTextBuffer;
             }
             else
             {
-                fileTextOutput = "file load unsuccessful " + append;
+                processor.fileTextOutput = "file load unsuccessful " + append;
                 
                 if (reload)
                 {
-                    last.resetLastKnownFilePath(&processor.getPluginState());
+                    last->resetLastKnownFilePath(&processor.getPluginState());
                     
-                    fileTextBuffer = FILE_TEXT_BUFFER_EMPTY;
+                    fileTextBuffer = processor.FILE_TEXT_BUFFER_EMPTY;
                 }
             }
             
+            resetOutputText = false;
+            
             callAfterDelay(2500, [this, last]
             {
-                auto current = processor.getPitchMapper().currentIntervalMap;
-                
-                if (!current.isEmpty())
-                {
-                    int index = processor.getPitchMapper().getSelectedNoteMapIndex();
-                    auto nms = current.noteMaps;
-                    
-                    if (nms.find(index) != nms.end())
-                    {
-                        auto map = nms[index];
-                        auto name = map.name;
-                        
-                        fileTextAppend = " -> " + name + " [" + to_string(index) + "] ";
-                    }
-                    else
-                    {
-                        fileTextAppend = "";
-                    }
-                }
-                else
-                {
-                    fileTextAppend = "";
-                }
-                
-                if (last == current)
-                {
-                    fileTextOutput = fileTextBuffer + fileTextAppend;
-                }
+                resetOutputText = true;
             });
         };
         
-        auto path = processor.getPitchMapper().currentIntervalMap.getLastKnownFilePath(&processor.getPluginState());
+        auto path = processor.getPitchMapper().currentIntervalMap->getLastKnownFilePath(&processor.getPluginState());
         
         if (intervalMapButton.getButtonText() == "<reload>" && !path.getValue().isUndefined())
         {
@@ -211,35 +179,6 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
                 load(file);
             });
         }
-    };
-    
-    processor.getPitchMapper().onMapChangeAsync = [this]
-    {
-        auto index = processor.getPitchMapper().getSelectedNoteMapIndex();
-        auto im = processor.getPitchMapper().currentIntervalMap;
-        
-        if (!im.isEmpty())
-        {
-            auto nms = im.noteMaps;
-            if (nms.find(index) != nms.end())
-            {
-                auto map = nms[index];
-                auto name = map.name;
-                
-                fileTextAppend = " -> " + name + " [" + to_string(index) + "] ";
-            }
-            else
-            {
-                fileTextAppend = "";
-            }
-            
-            fileTextOutput = fileTextBuffer + fileTextAppend;
-            
-            return;
-        }
-        
-        fileTextAppend = "";
-        fileTextOutput = fileTextBuffer;
     };
     
     // settings gui
@@ -395,7 +334,7 @@ void HTIntervalEngineAudioProcessorEditor::setCurrentWindow(Window* window)
 
 void HTIntervalEngineAudioProcessorEditor::updateCurrentRootIntervalText()
 {
-    auto mapper = processor.getPitchMapper();
+    auto& mapper = processor.getPitchMapper();
     auto root = mapper.getCurrentRootInterval();
     auto text = "root: " + mapper.getCurrentRootNote().toStdString() + (root > 0 ? " [" + to_string(root) + " semitones]" : " [key]");
     
@@ -407,14 +346,76 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
 {
     updateCurrentRootIntervalText();
     
-    if (fileLoadLabel.getText() != fileTextOutput)
+    if (fileLoadLabel.getText() != processor.fileTextOutput)
     {
-        fileLoadLabel.setText(fileTextOutput, dontSendNotification);
+        fileLoadLabel.setText(processor.fileTextOutput, dontSendNotification);
     }
     
-    auto mapper = processor.getPitchMapper();
+    auto& mapper = processor.getPitchMapper();
     
-    if (ModifierKeys::getCurrentModifiers().isShiftDown() && !mapper.currentIntervalMap.isEmpty() &&  !mapper.currentIntervalMap.getLastKnownFilePath(&processor.getPluginState()).getValue().isUndefined())
+    if (mapper.onMapChangeAsync)
+    {
+        auto index = processor.getPitchMapper().getSelectedNoteMapIndex();
+        auto im = processor.getPitchMapper().currentIntervalMap;
+        
+        if (im)
+        {
+            auto nms = im->noteMaps;
+            if (nms.find(index) != nms.end())
+            {
+                auto map = nms[index];
+                auto name = map.name;
+                
+                fileTextAppend = " -> " + name + " [" + to_string(index) + "] ";
+            }
+            else
+            {
+                fileTextAppend = "";
+            }
+            
+            processor.fileTextOutput = fileTextBuffer + fileTextAppend;
+            
+            return;
+        }
+        
+        fileTextAppend = "";
+        processor.fileTextOutput = fileTextBuffer;
+        
+        mapper.onMapChangeAsync = false;
+    }
+    
+    if (resetOutputText)
+    {
+        auto current = processor.getPitchMapper().currentIntervalMap;
+        
+        if (current)
+        {
+            int index = processor.getPitchMapper().getSelectedNoteMapIndex();
+            auto nms = current->noteMaps;
+            
+            if (nms.find(index) != nms.end())
+            {
+                auto map = nms[index];
+                auto name = map.name;
+                
+                fileTextAppend = " -> " + name + " [" + to_string(index) + "] ";
+            }
+            else
+            {
+                fileTextAppend = "";
+            }
+        }
+        else
+        {
+            fileTextAppend = "";
+        }
+        
+        processor.fileTextOutput = fileTextBuffer + fileTextAppend;
+        
+        resetOutputText = false;
+    }
+    
+    if (ModifierKeys::getCurrentModifiers().isShiftDown() && mapper.currentIntervalMap &&  !mapper.currentIntervalMap->getLastKnownFilePath(&processor.getPluginState()).getValue().isUndefined())
     {
         intervalMapButton.setButtonText("<reload>");
     }

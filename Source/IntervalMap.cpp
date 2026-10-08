@@ -26,14 +26,3 @@ void IntervalMap::resetLastKnownFilePath(juce::AudioProcessorValueTreeState* plu
 {
     getLastKnownFilePath(pluginState).setValue(juce::var::undefined());
 }
-
-bool IntervalMap::isEmpty()
-{
-    return baseMap.map.empty() && noteMaps.empty();
-}
-
-void IntervalMap::clear()
-{
-    baseMap.map.clear();
-    noteMaps.clear();
-}

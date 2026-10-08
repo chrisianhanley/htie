@@ -4,14 +4,7 @@
 using namespace juce;
 using namespace std;
 
-std::atomic<float>* Mixer::x1 = nullptr;
-std::atomic<float>* Mixer::x2 = nullptr;
-std::atomic<float>* Mixer::x3 = nullptr;
-std::atomic<float>* Mixer::x4 = nullptr;
-std::atomic<float>* Mixer::x5 = nullptr;
-std::atomic<float>* Mixer::x6 = nullptr;
-
-void Mixer::initializeValues(juce::AudioProcessorValueTreeState::ParameterLayout& layout)
+void Mixer::createLayout(juce::AudioProcessorValueTreeState::ParameterLayout& layout)
 {
     layout.add(make_unique<juce::AudioParameterFloat>(ParameterID { "x1", 2 }, "x1", 0, 1, .35f));
     layout.add(make_unique<juce::AudioParameterFloat>(ParameterID { "x2", 2 }, "x2", 0, 1, .45f));

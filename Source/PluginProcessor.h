@@ -62,6 +62,10 @@ public:
     PitchMapper& getPitchMapper();
     SynthEngine& getSynthEngine();
     
+    static const juce::String FILE_TEXT_BUFFER_EMPTY;
+    
+    juce::String fileTextOutput;
+    
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HTIntervalEngineAudioProcessor)
@@ -82,11 +86,11 @@ private:
     
     juce::MidiBuffer generatedEvents;
     
-    bool isAddingFromMidiInput;
+    bool isAddingFromMidiInput = false;
     
-    int lastRootNote;
+    int lastRootNote = false;
     
-    bool pedalEnabled;
+    bool pedalEnabled = false;
     
     void handleNoteOn(juce::MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
     void handleNoteOff(juce::MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;

@@ -16,6 +16,7 @@ public:
     void controllerMoved(int controllerNumber, int newControllerValue) override;
     void renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override;
     void setFrequency(double frequency) override;
+    void prepareToPlay(double sampleRate) override;
     void setOscillators(unsigned int n) override;
     
     void reset();
@@ -27,6 +28,7 @@ private:
     float initialFrequency;
     float level;
     float tailOff;
+    
     std::vector<float> ratios;
 };
 

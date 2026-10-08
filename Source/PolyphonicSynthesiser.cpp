@@ -16,6 +16,11 @@ PolyphonicSynthesiserVoice::PolyphonicSynthesiserVoice(SoundProfile& profile, Au
     setOscillators(12);
 }
 
+void PolyphonicSynthesiserVoice::prepareToPlay(double sampleRate)
+{
+    frequency.reset(sampleRate, 0.8);
+}
+
 void PolyphonicSynthesiserVoice::setOscillators(unsigned int numVoices)
 {
     if (numVoices < 1)
@@ -47,13 +52,15 @@ void PolyphonicSynthesiserVoice::startNote(int midiNoteNumber, float velocity, j
     
     initialFrequency = engine.map(midiNoteNumber);
     
-    oscillators[0].setFrequency(initialFrequency, getSampleRate());
+    frequency.setTargetValue(initialFrequency);
     
-    frequency.setCurrentAndTargetValue(initialFrequency);
-    gain.setCurrentAndTargetValue(soundProfile.parameters.gainValue);
+    gain.setTargetValue(soundProfile.parameters.gainValue);
     
     level = midiNoteNumber == engine.getPedalNote() ? 0.8 : velocity;
+    
     tailOff = 0;
+    
+    oscillators[0].setFrequency(frequency.getNextValue(), getSampleRate());
     
     auto superimpose = soundProfile.parameters.superimposeParameter;
     if (!soundProfile.pitchMapper.isSubstituted(midiNoteNumber) && *superimpose != 12)
@@ -66,9 +73,11 @@ void PolyphonicSynthesiserVoice::startNote(int midiNoteNumber, float velocity, j
             
             auto freq = soundProfile.pitchMapper.mapRelative(midiNoteNumber, super, false);
             
-            ratios[i - 1] = freq / initialFrequency;
+            auto ratio = freq / initialFrequency;
             
-            oscillators[i].setFrequency(freq, getSampleRate());
+            ratios[i - 1] = ratio;
+            
+            oscillators[i].setFrequency(frequency.getNextValue() * ratio, getSampleRate());
         }
     }
 }
@@ -114,7 +123,7 @@ void PolyphonicSynthesiserVoice::renderNextBlock(AudioSampleBuffer& outputBuffer
         
         while (numSamples > 0)
         {
-            oscillators[0].setFrequency(frequency.getCurrentValue(), getSampleRate());
+            oscillators[0].setFrequency(frequency.getNextValue(), getSampleRate());
             
             float nextSample = oscillators[0].getNextSample();
             
@@ -124,7 +133,7 @@ void PolyphonicSynthesiserVoice::renderNextBlock(AudioSampleBuffer& outputBuffer
                 {
                     if (oscillators[i].getDelta() != 0)
                     {
-                        oscillators[i].setFrequency(frequency.getCurrentValue() * ratios[i - 1], getSampleRate());
+                        oscillators[i].setFrequency(frequency.getNextValue() * ratios[i - 1], getSampleRate());
                         
                         nextSample += oscillators[i].getNextSample() * *soundProfile.parameters.mixParameter;
                     }
@@ -144,7 +153,7 @@ void PolyphonicSynthesiserVoice::renderNextBlock(AudioSampleBuffer& outputBuffer
                 }
             }
             
-            nextSample *= level * gain.getCurrentValue();
+            nextSample *= level * gain.getNextValue();
             
             for (int i = outputBuffer.getNumChannels() - 1; i >= 0; i--)
             {
@@ -211,6 +220,8 @@ void PolyphonicSynthesiser::enable()
     }
     
     synth.addSound(new PolyphonicSynthesiserSound());
+    
+    createTable();
 }
 
 void PolyphonicSynthesiser::update()
@@ -231,8 +242,6 @@ int sgn(T val)
 
 void PolyphonicSynthesiser::createTable()
 {
-    wavetable.clear();
-    
     auto size = parameters.wavetableResolutionValue.load();
     
     auto totalSize = size * 4; // size multiplied by num cycles
@@ -245,15 +254,15 @@ void PolyphonicSynthesiser::createTable()
     
     auto samples = wavetable.getWritePointer(0);
     
-    float sawWeight = *Mixer::x1;
+    float sawWeight = *parameters.getMixer().x1;
     
-    float triangleWeight = *Mixer::x2;
+    float triangleWeight = *parameters.getMixer().x2;
     
-    float squareWeight = *Mixer::x3;
+    float squareWeight = *parameters.getMixer().x3;
     
-    float square1Weight = *Mixer::x4;
+    float square1Weight = *parameters.getMixer().x4;
     
-    float square2Weight = *Mixer::x5;
+    float square2Weight = *parameters.getMixer().x5;
     
     float weights = sawWeight + triangleWeight + squareWeight + square1Weight + square2Weight;
     

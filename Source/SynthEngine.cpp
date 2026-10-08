@@ -18,20 +18,21 @@ using namespace juce;
 SynthEngine::SynthEngine(PluginParameters& p, PitchMapper& m) : parameters(p), pitchMapper(m)
 {
     pedalNote = -1;
-    
-    pitchMapper.onMapChangeSync = [this] {
-        for (int i = 0; i < synth.getNumVoices(); i++)
+}
+
+void SynthEngine::redrawVoices()
+{
+    for (int i = 0; i < synth.getNumVoices(); i++)
+    {
+        auto voice = synth.getVoice(i);
+        
+        if (voice->isVoiceActive())
         {
-            auto voice = synth.getVoice(i);
+            int note = voice->getCurrentlyPlayingNote();
             
-            if (voice->isVoiceActive())
-            {
-                int note = voice->getCurrentlyPlayingNote();
-                
-                voice->setFrequency(map(note));
-            }
+            voice->setFrequency(map(note));
         }
-    };
+    }
 }
 
 Synthesiser& SynthEngine::getSynth()
@@ -68,6 +69,13 @@ void SynthEngine::setCurrentBuffer(juce::MidiBuffer buffer)
 void SynthEngine::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     synth.setCurrentPlaybackSampleRate(sampleRate);
+    
+    for (int i = 0; i < synth.getNumVoices(); i++)
+    {
+        auto voice = synth.getVoice(i);
+        
+        voice->prepareToPlay(sampleRate);
+    }
 }
 
 void SynthEngine::releaseResources() {}

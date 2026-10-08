@@ -41,18 +41,18 @@ public:
     
     void reset(bool notify);
     
-    std::function<void()> onMapChangeAsync;
-    std::function<void()> onMapChangeSync;
-    std::function<void()> onRootIntervalChangeAsync;
+    std::atomic<bool> onMapChangeSync = false;
+    std::atomic<bool> onMapChangeAsync = false;
+    std::atomic<bool> onRootIntervalChange = false;
     
     bool isSubstituted(unsigned int noteNumber);
     
-    IntervalMap currentIntervalMap;
+    std::shared_ptr<IntervalMap> currentIntervalMap;
     
 private:
     PluginParameters& parameters;
     
-    int selectedNoteMapIndex;
-    int currentRootInterval;
+    int selectedNoteMapIndex = 0;
+    int currentRootInterval = 0;
 };
 

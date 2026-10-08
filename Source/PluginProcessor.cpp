@@ -11,6 +11,8 @@ using namespace juce;
 
 //using Parameter = AudioProcessorValueTreeState::Parameter;
 
+const String HTIntervalEngineAudioProcessor::FILE_TEXT_BUFFER_EMPTY = "[empty]";
+
 HTIntervalEngineAudioProcessor::HTIntervalEngineAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor(BusesProperties()
@@ -20,7 +22,7 @@ HTIntervalEngineAudioProcessor::HTIntervalEngineAudioProcessor()
                       #endif
                        .withOutput("Output", AudioChannelSet::stereo(), true)
                      #endif
-                      ), pluginState(*this, nullptr, Identifier("HTIntervalEngine"), createLayout()), pitchMapper(parameters), synthEngine(parameters, pitchMapper)
+                      ), fileTextOutput(FILE_TEXT_BUFFER_EMPTY), pluginState(*this, nullptr, Identifier("HTIntervalEngine"), createLayout()), pitchMapper(parameters), synthEngine(parameters, pitchMapper)
 #endif
 {
     parameters.createReferences(&pluginState);
@@ -50,7 +52,7 @@ AudioProcessorValueTreeState::ParameterLayout HTIntervalEngineAudioProcessor::cr
     layout.add(make_unique<juce::AudioParameterFloat>(ParameterID { "mix", 1 }, "mix", 0, 1, 0.5f));
     layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "numVoices", 1 }, "num voices", 1, 11, 1));
     
-    Mixer::initializeValues(layout);
+    parameters.getMixer().createLayout(layout);
     
     return layout;
 }
@@ -273,6 +275,13 @@ bool HTIntervalEngineAudioProcessor::isBusesLayoutSupported(const BusesLayout& l
 
 void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
+    if (pitchMapper.onMapChangeSync)
+    {
+        synthEngine.redrawVoices();
+        
+        pitchMapper.onMapChangeSync = false;
+    }
+    
     MidiBuffer filteredMessages;
     
     auto pedalNote = synthEngine.getPedalNote();
@@ -316,7 +325,7 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
                 // calculate distance from current midi note to key center to compare to the root interval
                 auto keyInterval = pitchMapper.getInterval(*parameters.keyCenterParameter - 1, currentSemitones);
                 
-                if (!pitchMapper.currentIntervalMap.isEmpty() && currentNoteNumber != lastRootNote)
+                if (pitchMapper.currentIntervalMap && currentNoteNumber != lastRootNote)
                 {
                     // cancel operation if current note is identical to the root note, wait for additional input
                     if (keyInterval == pitchMapper.getCurrentRootInterval())
@@ -437,7 +446,7 @@ void HTIntervalEngineAudioProcessor::setStateInformation(const void* data, int s
             
             pluginState.replaceState(ValueTree::fromXml(*xmlState));
 
-            auto value = pitchMapper.currentIntervalMap.getLastKnownFilePath(&pluginState).getValue();
+            auto value = pitchMapper.currentIntervalMap->getLastKnownFilePath(&pluginState).getValue();
             
             if (!value.isUndefined())
             {
@@ -448,13 +457,13 @@ void HTIntervalEngineAudioProcessor::setStateInformation(const void* data, int s
             
             auto map = pitchMapper.currentIntervalMap;
             
-            if (!map.isEmpty())
+            if (map)
             {
-                HTIntervalEngineAudioProcessorEditor::fileTextOutput = "[" + map.baseMap.name + "]";
+                fileTextOutput = "[" + map->baseMap.name + "]";
             }
             else
             {
-                HTIntervalEngineAudioProcessorEditor::fileTextOutput = HTIntervalEngineAudioProcessorEditor::FILE_TEXT_BUFFER_EMPTY;
+                fileTextOutput = FILE_TEXT_BUFFER_EMPTY;
             }
         }
     }

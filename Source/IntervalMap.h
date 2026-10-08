@@ -21,14 +21,4 @@ public:
     
     juce::Value getLastKnownFilePath(juce::AudioProcessorValueTreeState*);
     void resetLastKnownFilePath(juce::AudioProcessorValueTreeState*);
-    
-    void clear();
-    
-    bool isEmpty();
- 
-    bool operator==(const IntervalMap& m) const
-    {
-        return baseMap.map == m.baseMap.map && noteMaps == m.noteMaps;
-    }
 };
-

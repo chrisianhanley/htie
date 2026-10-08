@@ -19,9 +19,9 @@ void PluginParameters::createReferences(juce::AudioProcessorValueTreeState* stat
     mixParameter = state->getRawParameterValue("mix");
     numVoicesParameter = state->getRawParameterValue("numVoices");
     
-    Mixer::createReferences(state);
+    mixer.createReferences(state);
     
-    jassert(keyCenterParameter && rootInputRangeParameter && quantizeRootParameter && pedalRootParameter && wavetableResolutionParameter);
+    jassert(keyCenterParameter && rootInputRangeParameter && quantizeRootParameter && pedalRootParameter && wavetableResolutionParameter && toggleNoteMapParameter && superimposeParameter && mixParameter && numVoicesParameter);
     
     pluginState = state;
 }
@@ -29,4 +29,9 @@ void PluginParameters::createReferences(juce::AudioProcessorValueTreeState* stat
 AudioProcessorValueTreeState* PluginParameters::getPluginState()
 {
     return pluginState;
+}
+
+Mixer& PluginParameters::getMixer()
+{
+    return mixer;
 }

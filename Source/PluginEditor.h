@@ -24,22 +24,20 @@ public:
     //==============================================================================
     void paint(juce::Graphics&) override;
     void resized() override;
-    
-    static const juce::String FILE_TEXT_BUFFER_EMPTY;
-    
-    static juce::String fileTextOutput;
 
 private:
     Processor& processor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HTIntervalEngineAudioProcessorEditor)
     
+    bool resetOutputText;
+    
     CustomLookAndFeel lookAndFeel;
     
     std::unique_ptr<Window> currentWindow;
     
-    static juce::String fileTextBuffer;
-    static juce::String fileTextAppend;
+    juce::String fileTextBuffer;
+    juce::String fileTextAppend;
     
     juce::Rectangle<int> boundsToFill;
     

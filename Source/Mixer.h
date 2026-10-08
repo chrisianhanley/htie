@@ -15,13 +15,13 @@
 class Mixer
 {
 public:
-    static void initializeValues(juce::AudioProcessorValueTreeState::ParameterLayout& layout);
-    static void createReferences(juce::AudioProcessorValueTreeState* state);
+    void createLayout(juce::AudioProcessorValueTreeState::ParameterLayout& layout);
+    void createReferences(juce::AudioProcessorValueTreeState* state);
     
-    static std::atomic<float>* x1;
-    static std::atomic<float>* x2;
-    static std::atomic<float>* x3;
-    static std::atomic<float>* x4;
-    static std::atomic<float>* x5;
-    static std::atomic<float>* x6;
+    std::atomic<float>* x1;
+    std::atomic<float>* x2;
+    std::atomic<float>* x3;
+    std::atomic<float>* x4;
+    std::atomic<float>* x5;
+    std::atomic<float>* x6;
 };
