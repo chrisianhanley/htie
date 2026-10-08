@@ -1,11 +1,12 @@
 #include "IntervalMap.h"
 #include "Map.h"
-#include "PluginParameters.h"
 
 #include <iostream>
 #include <fstream>
 
 using namespace juce;
+
+IntervalMap::IntervalMap() : baseMap(Map()), noteMaps() {}
 
 IntervalMap::IntervalMap(Map bm, unordered_map<int, Map> nms) : baseMap(bm), noteMaps(nms) {}
 
@@ -14,16 +15,25 @@ IntervalMap::~IntervalMap()
     noteMaps.clear();
 }
 
-Value IntervalMap::getLastKnownFilePath()
+Value IntervalMap::getLastKnownFilePath(juce::AudioProcessorValueTreeState* pluginState)
 {
-    auto state = PluginParameters::getPluginState();
+    jassert(pluginState);
     
-    jassert(state);
-    
-    return state->state.getPropertyAsValue("lastKnownFilePath", nullptr, true);
+    return pluginState->state.getPropertyAsValue("lastKnownFilePath", nullptr, true);
 }
 
-void IntervalMap::resetLastKnownFilePath()
+void IntervalMap::resetLastKnownFilePath(juce::AudioProcessorValueTreeState* pluginState)
 {
-    getLastKnownFilePath().setValue(juce::var::undefined());
+    getLastKnownFilePath(pluginState).setValue(juce::var::undefined());
+}
+
+bool IntervalMap::isEmpty()
+{
+    return baseMap.map.empty() && noteMaps.empty();
+}
+
+void IntervalMap::clear()
+{
+    baseMap.map.clear();
+    noteMaps.clear();
 }

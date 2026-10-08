@@ -2,56 +2,57 @@
 
 #include <JuceHeader.h>
 #include "IntervalMap.h"
+#include "PluginParameters.h"
 #include "Map.h"
 
 class PitchMapper
 {
 public:
+    PitchMapper(PluginParameters&);
+    
     static const bool USE_SHARPS;
     static const int OCTAVE_FOR_MIDDLE_C;
     
     static std::unordered_map<juce::String, int> noteToSemitones;
     
-    static int loadIntervalMap(juce::File* json);
-    static float ratioToDecimal(std::string ratio);
-    static float ratioToCents(float ratio);
-    static float centsToRatio(float cents);
+    int loadIntervalMap(juce::File* json);
+    float ratioToDecimal(std::string ratio);
+    float ratioToCents(float ratio);
+    float centsToRatio(float cents);
     
-    static int getSelectedNoteMapIndex();
-    static int setNoteMap(unsigned int index, bool notify);
+    int getSelectedNoteMapIndex();
+    int setNoteMap(unsigned int index, bool notify);
     
-    static int getCurrentRootInterval();
-    static void setCurrentRootInterval(int root);
-    static int getCurrentRootAsSemitones();
-    static juce::String getCurrentRootNote();
+    int getCurrentRootInterval();
+    void setCurrentRootInterval(int root);
+    int getCurrentRootAsSemitones();
+    juce::String getCurrentRootNote();
     
-    static juce::String getNoteNumberAsNote(unsigned int noteNumber);
-    static int getInterval(unsigned int a, unsigned int b);
-    static int getNoteAsSemitones(juce::String note);
-    static juce::String getSemitonesAsNote(unsigned int semitones);
-    static juce::String getIntervalAsNote(unsigned int from, unsigned int interval);
-    static float intervalToCents12(unsigned int interval);
+    juce::String getNoteNumberAsNote(unsigned int noteNumber);
+    int getInterval(unsigned int a, unsigned int b);
+    int getNoteAsSemitones(juce::String note);
+    juce::String getSemitonesAsNote(unsigned int semitones);
+    juce::String getIntervalAsNote(unsigned int from, unsigned int interval);
+    float intervalToCents12(unsigned int interval);
     
-    static float map(int midiNoteNumber, bool useNoteMap);
-    static float map(int midiNoteNumber, float transposeCents, bool useNoteMap);
-    static float mapRelative(int midiNoteNumber, int root, bool useNoteMap);
+    float map(int midiNoteNumber, bool useNoteMap);
+    float map(int midiNoteNumber, float transposeCents, bool useNoteMap);
+    float mapRelative(int midiNoteNumber, int root, bool useNoteMap);
     
-    static IntervalMap* getCurrentIntervalMap();
+    void reset(bool notify);
     
-    static void reset(bool notify);
+    std::function<void()> onMapChangeAsync;
+    std::function<void()> onMapChangeSync;
+    std::function<void()> onRootIntervalChangeAsync;
     
-    static std::function<void()> onMapChangeAsync;
-    static std::function<void()> onMapChangeSync;
-    static std::function<void()> onRootIntervalChangeAsync;
+    bool isSubstituted(unsigned int noteNumber);
     
-    static bool isSubstituted(unsigned int noteNumber);
+    IntervalMap currentIntervalMap;
     
 private:
-    PitchMapper();
+    PluginParameters& parameters;
     
-    static int selectedNoteMapIndex;
-    static int currentRootInterval;
-    
-    static std::unique_ptr<IntervalMap> currentIntervalMap;
+    int selectedNoteMapIndex;
+    int currentRootInterval;
 };
 

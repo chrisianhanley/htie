@@ -10,19 +10,16 @@
 
 #pragma once
 
+#include "PluginParameters.h"
 #include "SynthEngine.h"
 #include "Window.h"
 
 class SoundProfile
 {
 public:
-    SoundProfile(SynthEngine& engine, unsigned int i);
+    SoundProfile(SynthEngine& engine, PitchMapper& pm, PluginParameters& p, unsigned int i);
     
     virtual ~SoundProfile();
-    
-    SynthEngine& getSynthEngine();
-    
-    unsigned int getProfileId();
     
     virtual juce::String getDisplayName() = 0;
     
@@ -32,8 +29,11 @@ public:
     virtual void update() = 0;
     virtual void disable() = 0;
     
-protected:
     SynthEngine& synthEngine;
     
-    unsigned int profileId;
+    PitchMapper& pitchMapper;
+    
+    PluginParameters& parameters;
+    
+    const unsigned int profileId;
 };

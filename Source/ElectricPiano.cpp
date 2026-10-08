@@ -1,6 +1,6 @@
 #include "ElectricPiano.h"
 
-ElectricPiano::ElectricPiano(SynthEngine& engine, unsigned int i) : SoundProfile(engine, i), numVoices(8)
+ElectricPiano::ElectricPiano(SynthEngine& engine, PitchMapper& pm, PluginParameters& p, unsigned int i) : SoundProfile(engine, pm, p, i), numVoices(8)
 {
     
 }

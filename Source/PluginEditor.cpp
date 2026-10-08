@@ -19,13 +19,11 @@ String HTIntervalEngineAudioProcessorEditor::fileTextOutput = FILE_TEXT_BUFFER_E
 HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Processor& p)
 : AudioProcessorEditor(&p), processor(p), keyboardComponent(processor.getKeyboardState(), MidiKeyboardComponent::horizontalKeyboard)
 {
-    auto pluginState = PluginParameters::getPluginState();
-    
-    jassert(pluginState);
+    auto& pluginState = processor.getPluginState();
     
     LookAndFeel::getDefaultLookAndFeel().setDefaultSansSerifTypefaceName(CustomFont::TYPEFACE_NAME);
     
-    keyboardComponent.setOctaveForMiddleC(PitchMapper::OCTAVE_FOR_MIDDLE_C);
+    keyboardComponent.setOctaveForMiddleC(processor.getPitchMapper().OCTAVE_FOR_MIDDLE_C);
     keyboardComponent.setLowestVisibleKey(36); // C2
     
     // volume slider
@@ -35,12 +33,12 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     volumeSlider.setPopupDisplayEnabled(true, false, this);
     volumeSlider.setRange(-100, -12, 0.1);
     volumeSlider.setSkewFactor(5);
-    volumeSlider.setValue(Decibels::gainToDecibels(PluginParameters::gainValue.load()));
+    volumeSlider.setValue(Decibels::gainToDecibels(processor.getParameters().gainValue.load()));
     volumeSlider.onValueChange = [this]
     {
         auto gain = Decibels::decibelsToGain((double) volumeSlider.getValue());
         
-        PluginParameters::gainValue = gain;
+        processor.getParameters().gainValue = gain;
     };
     
     // key center
@@ -61,7 +59,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     keyCenterSelection.addItem("A#", 11);
     keyCenterSelection.addItem("B", 12);
     keyCenterSelection.onChange = [this] { updateCurrentRootIntervalText(); };
-    keyCenterAttachment.reset(new ComboBoxAttachment(*pluginState, "keyCenter", keyCenterSelection));
+    keyCenterAttachment.reset(new ComboBoxAttachment(pluginState, "keyCenter", keyCenterSelection));
     
     // root input range
     rootInputRangeLabel.setLookAndFeel(&lookAndFeel);
@@ -78,27 +76,27 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     rootInputRangeSelection.addItem("C5 - C6", 8);
     rootInputRangeSelection.addItem("C6 - C7", 9);
     rootInputRangeSelection.addItem("C7 - C8", 10);
-    rootInputRangeAttachment.reset(new ComboBoxAttachment(*pluginState, "rootInputRange", rootInputRangeSelection));
+    rootInputRangeAttachment.reset(new ComboBoxAttachment(pluginState, "rootInputRange", rootInputRangeSelection));
     
     // quantize root
     quantizeRootLabel.setLookAndFeel(&lookAndFeel);
     quantizeRootToggle.setLookAndFeel(&lookAndFeel);
     quantizeRootLabel.setFont(CustomFont::REGULAR);
     quantizeRootLabel.setText("quantize: ", dontSendNotification);
-    quantizeRootAttachment.reset(new ButtonAttachment(*pluginState, "quantizeRoot", quantizeRootToggle));
+    quantizeRootAttachment.reset(new ButtonAttachment(pluginState, "quantizeRoot", quantizeRootToggle));
     
     // pedal root
     pedalRootLabel.setLookAndFeel(&lookAndFeel);
     pedalRootToggle.setLookAndFeel(&lookAndFeel);
     pedalRootLabel.setFont(CustomFont::REGULAR);
     pedalRootLabel.setText("pedal: ", NotificationType::dontSendNotification);
-    pedalRootAttachment.reset(new ButtonAttachment(*pluginState, "pedalRoot", pedalRootToggle));
+    pedalRootAttachment.reset(new ButtonAttachment(pluginState, "pedalRoot", pedalRootToggle));
     
     // current root
     currentRootIntervalLabel.setLookAndFeel(&lookAndFeel);
     currentRootIntervalLabel.setFont(CustomFont::ITALIC);
     currentRootIntervalLabel.setJustificationType(Justification::right);
-    //PitchMapper::onRootIntervalChangeAsync = [this] { updateCurrentRootIntervalText(); };
+    //processor.pitchMapper.onRootIntervalChangeAsync = [this] { updateCurrentRootIntervalText(); };
 
     // interval map chooser
     intervalMapButton.setLookAndFeel(&lookAndFeel);
@@ -115,7 +113,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     {
         auto load = [this] (File file, bool reload = false)
         {
-            int result = PitchMapper::loadIntervalMap(&file);
+            int result = processor.getPitchMapper().loadIntervalMap(&file);
             
             string append = "";
             
@@ -136,11 +134,11 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
             
             String name;
             
-            const auto last = PitchMapper::getCurrentIntervalMap();
+            auto last = processor.getPitchMapper().currentIntervalMap;
             
-            if (last != nullptr)
+            if (!last.isEmpty())
             {
-                fileTextBuffer = "[" + last->baseMap.name + "]";
+                fileTextBuffer = "[" + last.baseMap.name + "]";
             }
             else
             {
@@ -157,7 +155,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
                 
                 if (reload)
                 {
-                    IntervalMap::resetLastKnownFilePath();
+                    last.resetLastKnownFilePath(&processor.getPluginState());
                     
                     fileTextBuffer = FILE_TEXT_BUFFER_EMPTY;
                 }
@@ -165,12 +163,12 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
             
             callAfterDelay(2500, [this, last]
             {
-                const auto current = PitchMapper::getCurrentIntervalMap();
+                auto current = processor.getPitchMapper().currentIntervalMap;
                 
-                if (current)
+                if (!current.isEmpty())
                 {
-                    int index = PitchMapper::getSelectedNoteMapIndex();
-                    auto nms = (*current).noteMaps;
+                    int index = processor.getPitchMapper().getSelectedNoteMapIndex();
+                    auto nms = current.noteMaps;
                     
                     if (nms.find(index) != nms.end())
                     {
@@ -196,7 +194,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
             });
         };
         
-        auto path = IntervalMap::getLastKnownFilePath();
+        auto path = processor.getPitchMapper().currentIntervalMap.getLastKnownFilePath(&processor.getPluginState());
         
         if (intervalMapButton.getButtonText() == "<reload>" && !path.getValue().isUndefined())
         {
@@ -215,13 +213,14 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
         }
     };
     
-    PitchMapper::onMapChangeAsync = [this]
+    processor.getPitchMapper().onMapChangeAsync = [this]
     {
-        int index = PitchMapper::getSelectedNoteMapIndex();
+        auto index = processor.getPitchMapper().getSelectedNoteMapIndex();
+        auto im = processor.getPitchMapper().currentIntervalMap;
         
-        if (auto im = PitchMapper::getCurrentIntervalMap())
+        if (!im.isEmpty())
         {
-            auto nms = (*im).noteMaps;
+            auto nms = im.noteMaps;
             if (nms.find(index) != nms.end())
             {
                 auto map = nms[index];
@@ -272,7 +271,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     {
         auto p = profiles[i];
         
-        soundSelection.addItem(p->getDisplayName(), p->getProfileId());
+        soundSelection.addItem(p->getDisplayName(), p->profileId);
     }
     
     soundSelection.setLookAndFeel(&lookAndFeel);
@@ -281,7 +280,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     {
         auto profile = processor.getSelectedSoundProfile();
         
-        soundSelection.setSelectedId(profile->getProfileId());
+        soundSelection.setSelectedId(profile->profileId);
         
         setCurrentWindow(profile->createWindow(*this));
     }
@@ -311,7 +310,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     superimposeSelection.addItem("11", 11);
     superimposeSelection.addItem("off", 12);
     superimposeSelection.setSelectedId(12);
-    superimposeAttachment.reset(new ComboBoxAttachment(*pluginState, "superimpose", superimposeSelection));
+    superimposeAttachment.reset(new ComboBoxAttachment(pluginState, "superimpose", superimposeSelection));
     
     mixLabel.setLookAndFeel(&lookAndFeel);
     mixLabel.setText("mix: ", dontSendNotification);
@@ -323,7 +322,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     mixSlider.setPopupDisplayEnabled(true, false, this);
     mixSlider.setRange(0, 1, 0.05f);
     mixSlider.setValue(0.5f);
-    mixAttachment.reset(new SliderAttachment(*pluginState, "mix", mixSlider));
+    mixAttachment.reset(new SliderAttachment(pluginState, "mix", mixSlider));
     
     numVoicesLabel.setLookAndFeel(&lookAndFeel);
     numVoicesLabel.setText("num voices: ", dontSendNotification);
@@ -341,7 +340,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     numVoicesSelection.addItem("10", 10);
     numVoicesSelection.addItem("11", 11);
     numVoicesSelection.setSelectedId(1);
-    numVoicesAttachment.reset(new ComboBoxAttachment(*pluginState, "numVoices", numVoicesSelection));
+    numVoicesAttachment.reset(new ComboBoxAttachment(pluginState, "numVoices", numVoicesSelection));
     
     // make visible
     addAndMakeVisible(&volumeSlider);
@@ -396,8 +395,9 @@ void HTIntervalEngineAudioProcessorEditor::setCurrentWindow(Window* window)
 
 void HTIntervalEngineAudioProcessorEditor::updateCurrentRootIntervalText()
 {
-    auto root = PitchMapper::getCurrentRootInterval();
-    auto text = "root: " + PitchMapper::getCurrentRootNote().toStdString() + (root > 0 ? " [" + to_string(root) + " semitones]" : " [key]");
+    auto mapper = processor.getPitchMapper();
+    auto root = mapper.getCurrentRootInterval();
+    auto text = "root: " + mapper.getCurrentRootNote().toStdString() + (root > 0 ? " [" + to_string(root) + " semitones]" : " [key]");
     
     currentRootIntervalLabel.setText(text, dontSendNotification);
     currentRootIntervalLabel.repaint();
@@ -412,7 +412,9 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
         fileLoadLabel.setText(fileTextOutput, dontSendNotification);
     }
     
-    if (ModifierKeys::getCurrentModifiers().isShiftDown() && PitchMapper::getCurrentIntervalMap() &&  !IntervalMap::getLastKnownFilePath().getValue().isUndefined())
+    auto mapper = processor.getPitchMapper();
+    
+    if (ModifierKeys::getCurrentModifiers().isShiftDown() && !mapper.currentIntervalMap.isEmpty() &&  !mapper.currentIntervalMap.getLastKnownFilePath(&processor.getPluginState()).getValue().isUndefined())
     {
         intervalMapButton.setButtonText("<reload>");
     }

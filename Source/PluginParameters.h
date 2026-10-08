@@ -6,29 +6,28 @@
 class PluginParameters
 {
 public:
-    static std::atomic<float>* keyCenterParameter;
-    static std::atomic<float>* rootInputRangeParameter;
-    static std::atomic<float>* quantizeRootParameter;
-    static std::atomic<float>* pedalRootParameter;
-    static std::atomic<float>* wavetableResolutionParameter;
-    static std::atomic<float>* toggleNoteMapParameter;
-    
-    static std::atomic<float>* superimposeParameter;
-    static std::atomic<float>* mixParameter;
-    static std::atomic<float>* numVoicesParameter;
-    
-    static std::atomic<float> gainValue;
-    static std::atomic<unsigned int> wavetableResolutionValue;
-    
-    static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
-    static void createReferences(juce::AudioProcessorValueTreeState* state);
-    static juce::AudioProcessorValueTreeState* getPluginState();
-    
-    static Mixer getMixer();
-    
-private:
     PluginParameters();
     
-    static juce::AudioProcessorValueTreeState* pluginState;
-    static Mixer mixer;
+    std::atomic<float>* keyCenterParameter;
+    std::atomic<float>* rootInputRangeParameter;
+    std::atomic<float>* quantizeRootParameter;
+    std::atomic<float>* pedalRootParameter;
+    std::atomic<float>* wavetableResolutionParameter;
+    std::atomic<float>* toggleNoteMapParameter;
+    
+    std::atomic<float>* superimposeParameter;
+    std::atomic<float>* mixParameter;
+    std::atomic<float>* numVoicesParameter;
+    
+    std::atomic<float> gainValue;
+    std::atomic<unsigned int> wavetableResolutionValue;
+    
+    void createReferences(juce::AudioProcessorValueTreeState* state);
+    juce::AudioProcessorValueTreeState* getPluginState();
+    
+    Mixer getMixer();
+    
+private:
+    juce::AudioProcessorValueTreeState* pluginState;
+    Mixer mixer;
 };

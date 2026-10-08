@@ -2,19 +2,22 @@
 
 #include "Window.h"
 #include "PolyphonicSynthesiser.h"
+#include "PluginProcessor.h"
 
 using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
 
 class PolyphonicSynthesiserWindow : public Window
 {
 public:
-    PolyphonicSynthesiserWindow(juce::AudioProcessorEditor& parent, PolyphonicSynthesiser& p);
+    PolyphonicSynthesiserWindow(PluginParameters& p, juce::AudioProcessorEditor& parent, PolyphonicSynthesiser& ps);
     ~PolyphonicSynthesiserWindow();
     
     void paint(juce::Graphics& g) override;
     void resized(juce::Rectangle<int> bounds) override;
 
 private:
+    PluginParameters& parameters;
+    
     PolyphonicSynthesiser& profile;
     
     const unsigned int numModules;

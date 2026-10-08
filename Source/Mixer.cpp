@@ -21,8 +21,10 @@ void Mixer::initializeValues(juce::AudioProcessorValueTreeState::ParameterLayout
     layout.add(make_unique<juce::AudioParameterFloat>(ParameterID { "x6", 2 }, "x6", 0, 1, 0));
 }
 
-void Mixer::createReferences(juce::AudioProcessorValueTreeState *state)
+void Mixer::createReferences(juce::AudioProcessorValueTreeState* state)
 {
+    jassert(state);
+    
     x1 = state->getRawParameterValue("x1");
     x2 = state->getRawParameterValue("x2");
     x3 = state->getRawParameterValue("x3");

@@ -20,13 +20,13 @@ HTIntervalEngineAudioProcessor::HTIntervalEngineAudioProcessor()
                       #endif
                        .withOutput("Output", AudioChannelSet::stereo(), true)
                      #endif
-                     ), pluginState(*this, nullptr, Identifier("HTIntervalEngine"), PluginParameters::createLayout())
+                      ), pluginState(*this, nullptr, Identifier("HTIntervalEngine"), createLayout()), pitchMapper(parameters), synthEngine(parameters, pitchMapper)
 #endif
 {
-    PluginParameters::createReferences(&pluginState);
+    parameters.createReferences(&pluginState);
     
-    soundProfiles.add(new PolyphonicSynthesiser(synthEngine, 1));
-    soundProfiles.add(new ElectricPiano(synthEngine, 2));
+    soundProfiles.add(new PolyphonicSynthesiser(synthEngine, pitchMapper, parameters, 1));
+    soundProfiles.add(new ElectricPiano(synthEngine, pitchMapper, parameters, 2));
     
     selectedSoundProfile = soundProfiles[0];
     selectedSoundProfile->enable();
@@ -35,6 +35,40 @@ HTIntervalEngineAudioProcessor::HTIntervalEngineAudioProcessor()
 }
 
 HTIntervalEngineAudioProcessor::~HTIntervalEngineAudioProcessor() {}
+
+AudioProcessorValueTreeState::ParameterLayout HTIntervalEngineAudioProcessor::createLayout()
+{
+    AudioProcessorValueTreeState::ParameterLayout layout;
+    
+    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "keyCenter", 2 }, "key", 1, 12, 1));
+    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "rootInputRange", 2 }, "input range", 1, 10, 5));
+    layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "quantizeRoot", 2 }, "quantize", false));
+    layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "pedalRoot", 2 }, "pedal", false));
+    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "wavetableResolution", 2 }, "wavetable res", 1, 6, 5));
+    layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "toggleNoteMap", 1 }, "toggle nm", true));
+    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "superimpose", 1 }, "superimpose", 1, 12, 12));
+    layout.add(make_unique<juce::AudioParameterFloat>(ParameterID { "mix", 1 }, "mix", 0, 1, 0.5f));
+    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "numVoices", 1 }, "num voices", 1, 11, 1));
+    
+    Mixer::initializeValues(layout);
+    
+    return layout;
+}
+
+AudioProcessorValueTreeState& HTIntervalEngineAudioProcessor::getPluginState()
+{
+    return pluginState;
+}
+
+PluginParameters& HTIntervalEngineAudioProcessor::getParameters()
+{
+    return parameters;
+}
+
+PitchMapper& HTIntervalEngineAudioProcessor::getPitchMapper()
+{
+    return pitchMapper;
+}
 
 SynthEngine& HTIntervalEngineAudioProcessor::getSynthEngine()
 {
@@ -57,7 +91,7 @@ SoundProfile* HTIntervalEngineAudioProcessor::setSelectedSoundProfile(int profil
     {
         auto p = soundProfiles[i];
         
-        if (p && p->getProfileId() == profileId)
+        if (p && p->profileId == profileId)
         {
             if (selectedSoundProfile)
             {
@@ -112,8 +146,8 @@ void HTIntervalEngineAudioProcessor::handleIncomingMidiMessage(MidiInput* input,
 }
 
 bool HTIntervalEngineAudioProcessor::noteWithinRange(int noteNumber) {
-    auto name = MidiMessage::getMidiNoteName(noteNumber, PitchMapper::USE_SHARPS, true, PitchMapper::OCTAVE_FOR_MIDDLE_C);
-    int range = *PluginParameters::rootInputRangeParameter - 3;
+    auto name = MidiMessage::getMidiNoteName(noteNumber, pitchMapper.USE_SHARPS, true, pitchMapper.OCTAVE_FOR_MIDDLE_C);
+    int range = *parameters.rootInputRangeParameter - 3;
     
     return name.contains(to_string(range));
 }
@@ -237,7 +271,7 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
     
     auto pedalNote = synthEngine.getPedalNote();
     
-    if (*PluginParameters::pedalRootParameter == 0 && pedalNote > -1)
+    if (*parameters.pedalRootParameter == 0 && pedalNote > -1)
     {
         auto off = MidiMessage::noteOff(synthEngine.getPedalChannel(), pedalNote);
         
@@ -270,16 +304,16 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
                 auto registerFlag = true;
                 auto pedalFlag = true;
                 
-                auto currentNote = PitchMapper::getNoteNumberAsNote(currentNoteNumber);
-                auto currentSemitones = PitchMapper::getNoteAsSemitones(currentNote);
+                auto currentNote = pitchMapper.getNoteNumberAsNote(currentNoteNumber);
+                auto currentSemitones = pitchMapper.getNoteAsSemitones(currentNote);
                 
                 // calculate distance from current midi note to key center to compare to the root interval
-                auto keyInterval = PitchMapper::getInterval(*PluginParameters::keyCenterParameter - 1, currentSemitones);
+                auto keyInterval = pitchMapper.getInterval(*parameters.keyCenterParameter - 1, currentSemitones);
                 
-                if (PitchMapper::getCurrentIntervalMap() && currentNoteNumber != lastRootNote)
+                if (!pitchMapper.currentIntervalMap.isEmpty() && currentNoteNumber != lastRootNote)
                 {
                     // cancel operation if current note is identical to the root note, wait for additional input
-                    if (keyInterval == PitchMapper::getCurrentRootInterval())
+                    if (keyInterval == pitchMapper.getCurrentRootInterval())
                     {
                         lastRootNote = currentNoteNumber;
                         registerFlag = false;
@@ -288,10 +322,10 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
                     // calculate distance from current held root note
                     else if (lastRootNote > -1)
                     {
-                        auto lastSemitones = PitchMapper::getNoteAsSemitones(PitchMapper::getNoteNumberAsNote(lastRootNote));
-                        auto lastInterval = PitchMapper::getInterval(lastSemitones, currentSemitones);
+                        auto lastSemitones = pitchMapper.getNoteAsSemitones(pitchMapper.getNoteNumberAsNote(lastRootNote));
+                        auto lastInterval = pitchMapper.getInterval(lastSemitones, currentSemitones);
                     
-                        if (PitchMapper::getSelectedNoteMapIndex() != PitchMapper::setNoteMap(lastInterval, true))
+                        if (pitchMapper.getSelectedNoteMapIndex() != pitchMapper.setNoteMap(lastInterval, true))
                         {
                             pedalEnabled = true;
                             registerFlag = false;
@@ -303,16 +337,16 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
                 // register new root note
                 if (registerFlag)
                 {
-                    if (!*PluginParameters::toggleNoteMapParameter)
+                    if (!*parameters.toggleNoteMapParameter)
                     {
-                        PitchMapper::setNoteMap(0, true);
+                        pitchMapper.setNoteMap(0, true);
                     }
                     
-                    PitchMapper::setCurrentRootInterval(keyInterval);
+                    pitchMapper.setCurrentRootInterval(keyInterval);
                     lastRootNote = currentNoteNumber;
                 }
                 
-                if (*PluginParameters::pedalRootParameter == 1 && pedalFlag && currentNoteNumber != pedalNote)
+                if (*parameters.pedalRootParameter == 1 && pedalFlag && currentNoteNumber != pedalNote)
                 {
                     if (pedalNote > -1)
                     {
@@ -393,24 +427,24 @@ void HTIntervalEngineAudioProcessor::setStateInformation(const void* data, int s
     {
         if (xmlState->hasTagName(pluginState.state.getType()))
         {
-            PitchMapper::reset(false);
+            pitchMapper.reset(false);
             
             pluginState.replaceState(ValueTree::fromXml(*xmlState));
 
-            auto value = IntervalMap::getLastKnownFilePath().getValue();
+            auto value = pitchMapper.currentIntervalMap.getLastKnownFilePath(&pluginState).getValue();
             
             if (!value.isUndefined())
             {
                 File file(value);
                 
-                PitchMapper::loadIntervalMap(&file);
+                pitchMapper.loadIntervalMap(&file);
             }
             
-            const auto map = PitchMapper::getCurrentIntervalMap();
+            auto map = pitchMapper.currentIntervalMap;
             
-            if (map != nullptr)
+            if (!map.isEmpty())
             {
-                HTIntervalEngineAudioProcessorEditor::fileTextOutput = "[" + map->baseMap.name + "]";
+                HTIntervalEngineAudioProcessorEditor::fileTextOutput = "[" + map.baseMap.name + "]";
             }
             else
             {

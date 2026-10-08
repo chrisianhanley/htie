@@ -10,14 +10,14 @@ using ComboBoxAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachmen
 class SettingsWindow : public Window
 {
 public:
-    SettingsWindow(Processor& processor, juce::AudioProcessorEditor& parent);
+    SettingsWindow(HTIntervalEngineAudioProcessor& processor, juce::AudioProcessorEditor& parent);
     ~SettingsWindow();
     
     void paint(juce::Graphics& g) override;
     void resized(juce::Rectangle<int> bounds) override;
     
 private:
-    Processor& processor;
+    HTIntervalEngineAudioProcessor& processor;
     
     CustomLookAndFeel lookAndFeel;
     

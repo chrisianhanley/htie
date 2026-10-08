@@ -39,7 +39,7 @@ class PolyphonicSynthesiserSound : public juce::SynthesiserSound
 class PolyphonicSynthesiser : public SoundProfile
 {
 public:
-    PolyphonicSynthesiser(SynthEngine& engine, unsigned int i);
+    PolyphonicSynthesiser(SynthEngine& engine, PitchMapper& pm, PluginParameters& p, unsigned int i);
     ~PolyphonicSynthesiser();
     
     juce::String getDisplayName() override;

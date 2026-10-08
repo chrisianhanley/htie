@@ -15,11 +15,11 @@
 
 using namespace juce;
 
-SynthEngine::SynthEngine()
+SynthEngine::SynthEngine(PluginParameters& p, PitchMapper& m) : parameters(p), pitchMapper(m)
 {
     pedalNote = -1;
     
-    PitchMapper::onMapChangeSync = [this] {
+    pitchMapper.onMapChangeSync = [this] {
         for (int i = 0; i < synth.getNumVoices(); i++)
         {
             auto voice = synth.getVoice(i);
@@ -87,16 +87,16 @@ float SynthEngine::map(int noteNumber)
     
     if (pedal)
     {
-        auto name = PitchMapper::getNoteNumberAsNote(noteNumber);
-        auto current = PitchMapper::getNoteAsSemitones(name);
+        auto name = pitchMapper.getNoteNumberAsNote(noteNumber);
+        auto current = pitchMapper.getNoteAsSemitones(name);
         
-        if (*PluginParameters::keyCenterParameter - 1 > current)
+        if (*parameters.keyCenterParameter - 1 > current)
         {
-            return PitchMapper::map(noteNumber, 1200, true);
+            return pitchMapper.map(noteNumber, 1200, true);
         }
     }
 
-    return PitchMapper::map(noteNumber, !pedal);
+    return pitchMapper.map(noteNumber, !pedal);
 }
 
 float SynthEngine::map(int noteNumber, float transposeCents)
@@ -105,14 +105,14 @@ float SynthEngine::map(int noteNumber, float transposeCents)
     
     if (pedal)
     {
-        auto name = PitchMapper::getNoteNumberAsNote(noteNumber);
-        auto current = PitchMapper::getNoteAsSemitones(name);
+        auto name = pitchMapper.getNoteNumberAsNote(noteNumber);
+        auto current = pitchMapper.getNoteAsSemitones(name);
         
-        if (*PluginParameters::keyCenterParameter - 1 > current)
+        if (*parameters.keyCenterParameter - 1 > current)
         {
-            return PitchMapper::map(noteNumber, transposeCents, true);
+            return pitchMapper.map(noteNumber, transposeCents, true);
         }
     }
 
-    return PitchMapper::map(noteNumber, !pedal);
+    return pitchMapper.map(noteNumber, !pedal);
 }

@@ -2,9 +2,7 @@
 
 #include <JuceHeader.h>
 #include "PitchMapper.h"
-#include "SynthEngine.h"
 #include "SoundProfile.h"
-#include "PluginParameters.h"
 
 //==============================================================================
 /**
@@ -52,20 +50,27 @@ public:
     
     bool noteWithinRange(int noteNumber);
     
-    SynthEngine& getSynthEngine();
-    
     juce::OwnedArray<SoundProfile>& getSoundProfiles();
     
     SoundProfile* getSelectedSoundProfile();
     SoundProfile* setSelectedSoundProfile(int profileId);
     
     juce::MidiKeyboardState& getKeyboardState();
-
+    
+    juce::AudioProcessorValueTreeState& getPluginState();
+    PluginParameters& getParameters();
+    PitchMapper& getPitchMapper();
+    SynthEngine& getSynthEngine();
+    
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HTIntervalEngineAudioProcessor)
     
     juce::AudioProcessorValueTreeState pluginState;
+    
+    PluginParameters parameters;
+    
+    PitchMapper pitchMapper;
     
     SynthEngine synthEngine;
     
@@ -82,10 +87,12 @@ private:
     int lastRootNote;
     
     bool pedalEnabled;
-
+    
     void handleNoteOn(juce::MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
     void handleNoteOff(juce::MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
     void handleIncomingMidiMessage(juce::MidiInput* input, const juce::MidiMessage& message) override;
+    
+    juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
 };
 
 using Processor = HTIntervalEngineAudioProcessor;

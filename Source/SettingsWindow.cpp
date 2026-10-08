@@ -1,8 +1,9 @@
 #include "SettingsWindow.h"
+#include "PluginProcessor.h"
 
 using namespace juce;
 
-SettingsWindow::SettingsWindow(Processor& p, AudioProcessorEditor& parent) : Window(parent), processor(p)
+SettingsWindow::SettingsWindow(HTIntervalEngineAudioProcessor& p, AudioProcessorEditor& parent) : Window(parent), processor(p)
 {
     titleLabel.setLookAndFeel(&lookAndFeel);
     titleLabel.setFont(CustomFont::REGULAR);
@@ -36,12 +37,12 @@ SettingsWindow::SettingsWindow(Processor& p, AudioProcessorEditor& parent) : Win
     {
         int res = 1 << (resolutionSelection.getSelectedId() + 6);
         
-        PluginParameters::wavetableResolutionValue = res;
+        processor.getParameters().wavetableResolutionValue = res;
         
         processor.getSelectedSoundProfile()->update();
     };
     
-    auto state = PluginParameters::getPluginState();
+    auto state = processor.getParameters().getPluginState();
     resolutionAttachment.reset(new ComboBoxAttachment(*state, "wavetableResolution", resolutionSelection));
     toggleNoteMapAttachment.reset(new ButtonAttachment(*state, "toggleNoteMap", toggleNoteMapButton));
     

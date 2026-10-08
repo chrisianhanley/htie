@@ -3,7 +3,7 @@
 using namespace juce;
 using namespace std;
 
-PolyphonicSynthesiserWindow::PolyphonicSynthesiserWindow(AudioProcessorEditor& parent, PolyphonicSynthesiser& p) : Window(parent), profile(p), numModules(6)
+PolyphonicSynthesiserWindow::PolyphonicSynthesiserWindow(PluginParameters& p, AudioProcessorEditor& parent, PolyphonicSynthesiser& ps) : Window(parent), parameters(p), profile(ps), numModules(6)
 {
     const auto saw = ImageCache::getFromMemory(BinaryData::saw_png, BinaryData::saw_pngSize);
     const auto triangle = ImageCache::getFromMemory(BinaryData::triangle_png, BinaryData::triangle_pngSize);
@@ -51,7 +51,7 @@ PolyphonicSynthesiserWindow::PolyphonicSynthesiserWindow(AudioProcessorEditor& p
     square2Slider.setPopupDisplayEnabled(true, false, &parent);
     square2Slider.setRange(min, max, interval);
     
-    auto state = PluginParameters::getPluginState();
+    auto state = parameters.getPluginState();
     sawAttachment.reset(new SliderAttachment(*state, "x1", sawSlider));
     triangleAttachment.reset(new SliderAttachment(*state, "x2", triangleSlider));
     squareAttachment.reset(new SliderAttachment(*state, "x3", squareSlider));

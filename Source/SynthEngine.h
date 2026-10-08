@@ -11,13 +11,15 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "PluginParameters.h"
+#include "PitchMapper.h"
 #include "WavetableOscillator.h"
 #include "Mixer.h"
 
 class SynthEngine : public juce::AudioSource
 {
 public:
-    SynthEngine();
+    SynthEngine(PluginParameters& p, PitchMapper& m);
 
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
     void releaseResources() override;
@@ -38,6 +40,10 @@ public:
 private:
     int pedalNote;
     int pedalChannel;
+    
+    PluginParameters& parameters;
+    
+    PitchMapper& pitchMapper;
     
     juce::Synthesiser synth;
     juce::MidiBuffer currentBuffer;

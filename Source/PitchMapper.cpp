@@ -28,14 +28,7 @@ unordered_map<String, int> PitchMapper::noteToSemitones = {
     { "F#", 6 }, { "G", 7 }, { "G#", 8 }, { "A", 9 }, { "A#", 10 }, { "B", 11 }
 };
 
-unique_ptr<IntervalMap> PitchMapper::currentIntervalMap = nullptr;
-
-std::function<void()> PitchMapper::onMapChangeAsync;
-std::function<void()> PitchMapper::onMapChangeSync;
-std::function<void()> PitchMapper::onRootIntervalChangeAsync;
-
-int PitchMapper::selectedNoteMapIndex;
-int PitchMapper::currentRootInterval;
+PitchMapper::PitchMapper(PluginParameters& p) : currentIntervalMap(), parameters(p) {}
 
 float PitchMapper::ratioToDecimal(string ratio)
 {
@@ -140,7 +133,7 @@ int PitchMapper::loadIntervalMap(File* json)
             {
                 if (auto* nms = obj->getProperty("notemaps").getDynamicObject())
                 {
-                    for (int i = 0; i < 11; i++)
+                    for (int i = 0; i <= 11; i++)
                     {
                         juce::String _id = to_string(i);
                         if (nms->getProperty(_id))
@@ -224,14 +217,14 @@ int PitchMapper::loadIntervalMap(File* json)
     }
     */
     
-    currentIntervalMap = make_unique<IntervalMap>(baseMap, noteMaps);
+    currentIntervalMap = IntervalMap(baseMap, noteMaps);
     
-    auto path = IntervalMap::getLastKnownFilePath();
+    auto path = currentIntervalMap.getLastKnownFilePath(parameters.getPluginState());
     path.setValue(json->getFullPathName());
     
     setNoteMap(0, false);
     
-    cout << "successfully loaded interval map [" + currentIntervalMap->baseMap.name + "]" << endl;
+    cout << "successfully loaded interval map [" + currentIntervalMap.baseMap.name + "]" << endl;
     return 0;
 }
 
@@ -242,12 +235,8 @@ int PitchMapper::getSelectedNoteMapIndex()
 
 int PitchMapper::setNoteMap(unsigned int index, bool notify)
 {
-    if (!currentIntervalMap)
-    {
-        return 0;
-    }
     
-    if (index == selectedNoteMapIndex || currentIntervalMap->noteMaps.find(index) == currentIntervalMap->noteMaps.end())
+    if (index == selectedNoteMapIndex || currentIntervalMap.noteMaps.find(index) == currentIntervalMap.noteMaps.end())
     {
         index = 0;
     }
@@ -294,7 +283,7 @@ void PitchMapper::setCurrentRootInterval(int root)
 
 int PitchMapper::getCurrentRootAsSemitones()
 {
-    int semitone = (*PluginParameters::keyCenterParameter - 1) + currentRootInterval;
+    int semitone = (*parameters.keyCenterParameter - 1) + currentRootInterval;
     
     if  (semitone >= 12)
     {
@@ -306,7 +295,7 @@ int PitchMapper::getCurrentRootAsSemitones()
 
 String PitchMapper::getCurrentRootNote()
 {
-    return getIntervalAsNote(*PluginParameters::keyCenterParameter - 1, currentRootInterval);
+    return getIntervalAsNote(*parameters.keyCenterParameter - 1, currentRootInterval);
 }
 
 juce::String PitchMapper::getNoteNumberAsNote(unsigned int noteNumber)
@@ -368,11 +357,11 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
 {
     const float startingFrequency = MidiMessage::getMidiNoteInHertz(midiNoteNumber);
     
-    if (currentIntervalMap)
+    if (!currentIntervalMap.isEmpty())
     {
         auto name = getNoteNumberAsNote(midiNoteNumber);
         
-        auto baseMap = currentIntervalMap->baseMap;
+        auto baseMap = currentIntervalMap.baseMap;
         auto rootNote = getCurrentRootAsSemitones();
         auto inputNote = getNoteAsSemitones(name);
         auto interval = getInterval(rootNote, inputNote);
@@ -385,7 +374,7 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
         
         cout << "mapped " + name + " to " + to_string(interval) << endl;
         
-        if (*PluginParameters::quantizeRootParameter == 0)
+        if (*parameters.quantizeRootParameter == 0)
         {
             startCents = intervalToCents12(currentRootInterval);
             targetCents = baseMap.map[currentRootInterval];
@@ -409,7 +398,7 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
             return startingFrequency;
         }
         
-        auto nms = currentIntervalMap->noteMaps;
+        auto nms = currentIntervalMap.noteMaps;
         if (useNoteMap && nms.find(selectedNoteMapIndex) != nms.end() && nms[selectedNoteMapIndex].map.find(interval) != nms[selectedNoteMapIndex].map.end())
         {
             if (inputNote != rootNote)
@@ -450,11 +439,11 @@ float PitchMapper::map(int midiNoteNumber, float transposeCents, bool useNoteMap
 float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
 {
     const float startingFrequency = MidiMessage::getMidiNoteInHertz(midiNoteNumber);
-    if (currentIntervalMap)
+    if (!currentIntervalMap.isEmpty())
     {
         auto name = getNoteNumberAsNote(midiNoteNumber);
         
-        auto baseMap = currentIntervalMap->baseMap;
+        auto baseMap = currentIntervalMap.baseMap;
         auto rootNote = getCurrentRootAsSemitones() + root;
         
         if (rootNote > 12)
@@ -473,7 +462,7 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
         
         cout << "mapped " + name + " to " + to_string(interval) << endl;
         
-        if (*PluginParameters::quantizeRootParameter == 0)
+        if (*parameters.quantizeRootParameter == 0)
         {
             startCents = intervalToCents12(currentRootInterval);
             targetCents = baseMap.map[currentRootInterval];
@@ -497,7 +486,7 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
             return startingFrequency;
         }
         
-        auto nms = currentIntervalMap->noteMaps;
+        auto nms = currentIntervalMap.noteMaps;
         if (useNoteMap && nms.find(selectedNoteMapIndex) != nms.end() && nms[selectedNoteMapIndex].map.find(interval) != nms[selectedNoteMapIndex].map.end())
         {
             if (inputNote != rootNote)
@@ -532,28 +521,23 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
 
 void PitchMapper::reset(bool notify)
 {
-    IntervalMap::resetLastKnownFilePath();
+    currentIntervalMap.resetLastKnownFilePath(parameters.getPluginState());
     
-    currentIntervalMap = nullptr;
-    
-    setNoteMap(0, notify);
-}
+    currentIntervalMap.clear();
 
-IntervalMap* PitchMapper::getCurrentIntervalMap()
-{
-    return currentIntervalMap.get();
+    setNoteMap(0, notify);
 }
 
 bool PitchMapper::isSubstituted(unsigned int noteNumber)
 {
-    if (currentIntervalMap != nullptr)
+    if (!currentIntervalMap.isEmpty())
     {
-        auto baseMap = currentIntervalMap->baseMap;
+        auto baseMap = currentIntervalMap.baseMap;
         auto rootNote = getCurrentRootAsSemitones();
         auto inputNote = getNoteAsSemitones(getNoteNumberAsNote(noteNumber));
         auto interval = getInterval(rootNote, inputNote);
         
-        auto nms = currentIntervalMap->noteMaps;
+        auto nms = currentIntervalMap.noteMaps;
         if (nms.find(selectedNoteMapIndex) != nms.end() && nms[selectedNoteMapIndex].map.find(interval) != nms[selectedNoteMapIndex].map.end() && inputNote != rootNote)
         {
             return true;

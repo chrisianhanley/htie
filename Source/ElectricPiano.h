@@ -8,7 +8,7 @@
 class ElectricPiano : public SoundProfile
 {
 public:
-    ElectricPiano(SynthEngine& engine, unsigned int i);
+    ElectricPiano(SynthEngine& engine, PitchMapper& pm, PluginParameters& p, unsigned int i);
     
     juce::String getDisplayName() override;
     

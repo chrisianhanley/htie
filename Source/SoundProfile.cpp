@@ -10,19 +10,9 @@
 
 #include "SoundProfile.h"
 
-SoundProfile::SoundProfile(SynthEngine& engine, unsigned int i) : synthEngine(engine), profileId(i)
+SoundProfile::SoundProfile(SynthEngine& engine, PitchMapper& pm, PluginParameters& p, unsigned int i) : synthEngine(engine), pitchMapper(pm), parameters(p), profileId(i)
 {
     jassert(profileId > 0);
 }
 
 SoundProfile::~SoundProfile() {}
-
-SynthEngine& SoundProfile::getSynthEngine()
-{
-    return synthEngine;
-}
-
-unsigned int SoundProfile::getProfileId()
-{
-    return profileId;
-}

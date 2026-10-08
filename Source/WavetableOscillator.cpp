@@ -2,7 +2,7 @@
 
 using namespace std;
 
-WavetableOscillator::WavetableOscillator(juce::AudioSampleBuffer& table, unsigned int c) : wavetable(table), cycles(c)
+WavetableOscillator::WavetableOscillator(juce::AudioSampleBuffer& table, unsigned int c) : wavetable(table), cycles(c), delta(0), currentIndex(0), lastSample(0)
 {
     jassert(wavetable.getNumChannels() == 1);
 }

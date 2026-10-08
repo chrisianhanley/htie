@@ -8,7 +8,7 @@ using namespace std;
 
 PolyphonicSynthesiserVoice::PolyphonicSynthesiserVoice(SoundProfile& profile, AudioSampleBuffer& table) : WavetableVoice(profile, table, 4)
 {
-    if (*PluginParameters::numVoicesParameter < 1)
+    if (*soundProfile.parameters.numVoicesParameter < 1)
     {
         jassertfalse;
     }
@@ -43,28 +43,28 @@ bool PolyphonicSynthesiserVoice::canPlaySound(juce::SynthesiserSound* sound)
 
 void PolyphonicSynthesiserVoice::startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound* sound, int currentPitchWheelPosition)
 {
-    auto& engine = soundProfile.getSynthEngine();
+    auto& engine = soundProfile.synthEngine;
     
     initialFrequency = engine.map(midiNoteNumber);
     
     oscillators[0].setFrequency(initialFrequency, getSampleRate());
     
     frequency.setCurrentAndTargetValue(initialFrequency);
-    gain.setCurrentAndTargetValue(PluginParameters::gainValue);
+    gain.setCurrentAndTargetValue(soundProfile.parameters.gainValue);
     
     level = midiNoteNumber == engine.getPedalNote() ? 0.8 : velocity;
     tailOff = 0;
     
-    auto superimpose = PluginParameters::superimposeParameter;
-    if (!PitchMapper::isSubstituted(midiNoteNumber) && *superimpose != 12)
+    auto superimpose = soundProfile.parameters.superimposeParameter;
+    if (!soundProfile.pitchMapper.isSubstituted(midiNoteNumber) && *superimpose != 12)
     {
-        for (int i = 1; i < *PluginParameters::numVoicesParameter + 1; i++)
+        for (int i = 1; i < *soundProfile.parameters.numVoicesParameter + 1; i++)
         {
             auto super = (int) *superimpose * i;
             
             super %= 12;
             
-            auto freq = PitchMapper::mapRelative(midiNoteNumber, super, false);
+            auto freq = soundProfile.pitchMapper.mapRelative(midiNoteNumber, super, false);
             
             ratios[i - 1] = freq / initialFrequency;
             
@@ -90,11 +90,13 @@ void PolyphonicSynthesiserVoice::stopNote(float velocity, bool allowTailOff)
 
 void PolyphonicSynthesiserVoice::pitchWheelMoved(int newPitchWheelValue)
 {
+    /*
     int range = 12;
     float valuePerSemitone = 8192 / range;
     float transpose = (newPitchWheelValue / valuePerSemitone) - range;
-    
-    frequency.setTargetValue(soundProfile.getSynthEngine().map(initialFrequency, transpose));
+
+    TODO -- add pitch wheel functionality
+    */
 }
 
 void PolyphonicSynthesiserVoice::controllerMoved(int controllerNumber, int newControllerValue) {}
@@ -108,7 +110,7 @@ void PolyphonicSynthesiserVoice::renderNextBlock(AudioSampleBuffer& outputBuffer
     
     if (oscillators[0].getDelta() != 0)
     {
-        gain.setTargetValue(PluginParameters::gainValue);
+        gain.setTargetValue(soundProfile.parameters.gainValue);
         
         while (numSamples > 0)
         {
@@ -116,15 +118,15 @@ void PolyphonicSynthesiserVoice::renderNextBlock(AudioSampleBuffer& outputBuffer
             
             float nextSample = oscillators[0].getNextSample();
             
-            if (*PluginParameters::superimposeParameter != 12)
+            if (*soundProfile.parameters.superimposeParameter != 12)
             {
-                for (int i = 1; i < *PluginParameters::numVoicesParameter + 1; i++)
+                for (int i = 1; i < *soundProfile.parameters.numVoicesParameter + 1; i++)
                 {
                     if (oscillators[i].getDelta() != 0)
                     {
                         oscillators[i].setFrequency(frequency.getCurrentValue() * ratios[i - 1], getSampleRate());
                         
-                        nextSample += oscillators[i].getNextSample() * *PluginParameters::mixParameter;
+                        nextSample += oscillators[i].getNextSample() * *soundProfile.parameters.mixParameter;
                     }
                 }
             }
@@ -179,7 +181,7 @@ bool PolyphonicSynthesiserSound::appliesToChannel(int midiChannel)
     return true;
 }
 
-PolyphonicSynthesiser::PolyphonicSynthesiser(SynthEngine& engine, unsigned int i) : SoundProfile(engine, i), numVoices(8)
+PolyphonicSynthesiser::PolyphonicSynthesiser(SynthEngine& engine, PitchMapper& pm, PluginParameters& p, unsigned int i) : SoundProfile(engine, pm, p, i), numVoices(8)
 {
     createTable();
 }
@@ -196,7 +198,7 @@ juce::String PolyphonicSynthesiser::getDisplayName()
 
 Window* PolyphonicSynthesiser::createWindow(juce::AudioProcessorEditor& parent)
 {
-    return new PolyphonicSynthesiserWindow(parent, *this);
+    return new PolyphonicSynthesiserWindow(parameters, parent, *this);
 }
 
 void PolyphonicSynthesiser::enable()
@@ -231,7 +233,7 @@ void PolyphonicSynthesiser::createTable()
 {
     wavetable.clear();
     
-    auto size = PluginParameters::wavetableResolutionValue.load();
+    auto size = parameters.wavetableResolutionValue.load();
     
     auto totalSize = size * 4; // size multiplied by num cycles
     
