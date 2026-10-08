@@ -77,13 +77,13 @@
  #define JucePlugin_EditorRequiresKeyboardFocus  0
 #endif
 #ifndef  JucePlugin_Version
- #define JucePlugin_Version                1.0.0-beta.7
+ #define JucePlugin_Version                1.0.0-beta.8
 #endif
 #ifndef  JucePlugin_VersionCode
- #define JucePlugin_VersionCode            0x1000007
+ #define JucePlugin_VersionCode            0x1000008
 #endif
 #ifndef  JucePlugin_VersionString
- #define JucePlugin_VersionString          "1.0.0-beta.7"
+ #define JucePlugin_VersionString          "1.0.0-beta.8"
 #endif
 #ifndef  JucePlugin_VSTUniqueID
  #define JucePlugin_VSTUniqueID            JucePlugin_PluginCode
@@ -158,7 +158,7 @@
  #define JucePlugin_ARAFactoryID           "com.IanHanley.HTIntervalEngine.factory"
 #endif
 #ifndef  JucePlugin_ARADocumentArchiveID
- #define JucePlugin_ARADocumentArchiveID   "com.IanHanley.HTIntervalEngine.aradocumentarchive.1.0.0-beta.7"
+ #define JucePlugin_ARADocumentArchiveID   "com.IanHanley.HTIntervalEngine.aradocumentarchive.1.0.0-beta.8"
 #endif
 #ifndef  JucePlugin_ARACompatibleArchiveIDs
  #define JucePlugin_ARACompatibleArchiveIDs  ""
