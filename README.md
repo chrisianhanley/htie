@@ -1,6 +1,7 @@
 **json format/interval map**:
 below is an interval map labeled "just intonation" with specified note maps. intervals can be either ratio or cent values. basemap must contain all 12 intervals. hold shift to reload.
 
+'''json
 {
   "basemap": {
     "name": "just intonation",
@@ -46,6 +47,7 @@ below is an interval map labeled "just intonation" with specified note maps. int
     }
   }
 }
+'''
 
 **how to select note map**:
 1. press and hold down root note.
