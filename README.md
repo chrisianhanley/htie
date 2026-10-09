@@ -1,10 +1,3 @@
-**how to select note map**
-1. press and hold down root note
-2. while root note is held, press the corresponding interval as specified in the note map (e.g., to select note map listed "5", press 5 semitones from the root, so in the case of C, press F.)
-3. press the same interval again to toggle off.
-
-*note*: you can select whether or not the note map resets on root change, see *toggle note map* in settings.
-
 **json format/interval map**
 below is an interval map labeled "just intonation" with specified note maps. intervals can be either ratio or cent values. basemap must contain all 12 intervals. hold shift to reload.
 
@@ -53,3 +46,12 @@ below is an interval map labeled "just intonation" with specified note maps. int
     }
   }
 }
+
+**how to select note map**
+1. press and hold down root note.
+2. while root note is held, press the corresponding interval as specified in the note map (e.g., to select note map listed "5", press 5 semitones from the root, so in the case of C, press F.)
+3. press the same interval again to toggle off.
+
+*note*: you can select whether or not the note map resets on root change, see *toggle note map* in settings.
+
+input range is reserved for root note changes. you can enable *pedal* to create a drone.
