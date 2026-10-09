@@ -295,11 +295,11 @@ void PolyphonicSynthesiser::createTable()
         
         float triangle = 2 * abs(2 * ((angle / period) - floor(0.5 + angle / period))) - 1;
         
-        float square = sin(angle) > 0.5 ? 1 : -1;
+        float square = sin(angle) < 0.5 ? 1 : -1;
         
-        float square1 = sin(angle * 0.5) > 0.5 ? 1 : -1;;
+        float square1 = sin(angle * 0.5) < 0.5 ? 1 : -1;;
         
-        float square2 = sin(angle * 0.25) > 0.5 ? 1 : -1;
+        float square2 = sin(angle * 0.25) < 0.5 ? 1 : -1;
         
         saw *= sawWeight;
         
