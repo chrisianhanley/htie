@@ -143,9 +143,12 @@ int PitchMapper::loadIntervalMap(File* json)
                                     }
                                 }
                                 
-                                if (baseMap.map.size() != 12)
+                                for (int i = 0; i < 12; i++)
                                 {
-                                    return -2;
+                                    if (baseMap.map.count(i) == 0)
+                                    {
+                                        return -4;
+                                    }
                                 }
                             }
                             else

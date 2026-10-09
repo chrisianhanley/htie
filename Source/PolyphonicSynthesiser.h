@@ -7,7 +7,7 @@
 class PolyphonicSynthesiserVoice : public WavetableVoice
 {
 public:
-    PolyphonicSynthesiserVoice(SoundProfile& profile, shared_ptr<juce::AudioSampleBuffer>& table);
+    PolyphonicSynthesiserVoice(SoundProfile& profile, juce::AudioSampleBuffer& table);
 
     bool canPlaySound(juce::SynthesiserSound* sound) override;
     void startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound* sound, int currentPitchWheelPosition) override;
@@ -57,5 +57,5 @@ public:
 private:
     unsigned int numVoices;
     
-    shared_ptr<juce::AudioSampleBuffer> wavetable;
+    juce::AudioSampleBuffer wavetable;
 };

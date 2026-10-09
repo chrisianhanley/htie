@@ -6,7 +6,7 @@
 using namespace juce;
 using namespace std;
 
-PolyphonicSynthesiserVoice::PolyphonicSynthesiserVoice(SoundProfile& profile, shared_ptr<juce::AudioSampleBuffer>& table) : WavetableVoice(profile, table, 4)
+PolyphonicSynthesiserVoice::PolyphonicSynthesiserVoice(SoundProfile& profile, juce::AudioSampleBuffer& table) : WavetableVoice(profile, table, 4)
 {
     if (*soundProfile.parameters.numVoicesParameter < 1)
     {
@@ -39,7 +39,7 @@ void PolyphonicSynthesiserVoice::setOscillators(unsigned int numVoices)
     ratios.clear();
     
     for (int i = 0; i < numVoices; i++) {
-        oscillators.push_back(WavetableOscillator(table, cycles));
+        oscillators.push_back(WavetableOscillator(cycles));
         
         if (i >= 1)
         {
@@ -67,7 +67,7 @@ void PolyphonicSynthesiserVoice::startNote(int midiNoteNumber, float velocity, j
     
     tailOff = 0;
     
-    oscillators[0].setFrequency(frequency.getNextValue(), getSampleRate());
+    oscillators[0].setFrequency(frequency.getNextValue(), table.getNumSamples(), getSampleRate());
     
     auto superimpose = soundProfile.parameters.superimposeParameter;
 
@@ -83,7 +83,7 @@ void PolyphonicSynthesiserVoice::startNote(int midiNoteNumber, float velocity, j
             
             ratios[i - 1] = ratio;
             
-            oscillators[i].setFrequency(frequency.getCurrentValue() * ratio, getSampleRate());
+            oscillators[i].setFrequency(frequency.getCurrentValue() * ratio, table.getNumSamples(), getSampleRate());
         }
     }
     else
@@ -138,9 +138,9 @@ void PolyphonicSynthesiserVoice::renderNextBlock(AudioSampleBuffer& outputBuffer
         {
             auto next = frequency.getNextValue();
             
-            oscillators[0].setFrequency(next, getSampleRate());
+            oscillators[0].setFrequency(next, table.getNumSamples(), getSampleRate());
             
-            float nextSample = oscillators[0].getNextSample();
+            float nextSample = oscillators[0].getNextSample(table);
             
             if (*soundProfile.parameters.superimposeParameter != 12)
             {
@@ -148,9 +148,9 @@ void PolyphonicSynthesiserVoice::renderNextBlock(AudioSampleBuffer& outputBuffer
                 {
                     if (oscillators[i].getDelta() != 0)
                     {
-                        oscillators[i].setFrequency(next * ratios[i - 1], getSampleRate());
+                        oscillators[i].setFrequency(next * ratios[i - 1], table.getNumSamples(), getSampleRate());
                         
-                        nextSample += oscillators[i].getNextSample() * *soundProfile.parameters.mixParameter;
+                        nextSample += oscillators[i].getNextSample(table) * *soundProfile.parameters.mixParameter;
                     }
                 }
             }
@@ -212,7 +212,6 @@ PolyphonicSynthesiser::PolyphonicSynthesiser(SynthEngine& engine, PitchMapper& p
 
 PolyphonicSynthesiser::~PolyphonicSynthesiser()
 {
-    atomic_load(&wavetable);
 }
 
 juce::String PolyphonicSynthesiser::getDisplayName()
@@ -266,11 +265,9 @@ void PolyphonicSynthesiser::createTable()
     auto delta = period / size;
     auto angle = 0.0;
     
-    AudioSampleBuffer buffer = AudioSampleBuffer(1, totalSize + 1);
+    wavetable.setSize(1, totalSize + 1);
     
-    buffer.setSize(1, totalSize + 1);
-    
-    auto samples = buffer.getWritePointer(0);
+    auto samples = wavetable.getWritePointer(0);
     
     float sawWeight = *parameters.getMixer().x1;
     
@@ -322,7 +319,5 @@ void PolyphonicSynthesiser::createTable()
     
     samples[totalSize] = samples[0];
     
-    atomic_store(&wavetable, make_shared<AudioSampleBuffer>(buffer));
-    
-    cout << "created wavetable with resolution [" + to_string(size) + "]" << endl;
+    //cout << "created wavetable with resolution [" + to_string(size) + "]" << endl;
 }

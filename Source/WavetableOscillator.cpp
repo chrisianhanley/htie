@@ -2,16 +2,11 @@
 
 using namespace std;
 
-WavetableOscillator::WavetableOscillator(shared_ptr<juce::AudioSampleBuffer>& t, unsigned int c) : table(t), cycles(c), delta(0), currentIndex(0), lastSample(0)
-{
-    jassert(t);
-    
-    jassert(t.get()->getNumChannels() == 1);
-}
+WavetableOscillator::WavetableOscillator(unsigned int c) : cycles(c), delta(0), currentIndex(0), lastSample(0) {}
 
-void WavetableOscillator::setFrequency(float hz, float sampleRate)
+void WavetableOscillator::setFrequency(float hz, float numSamples, float sampleRate)
 {
-    float cycle = atomic_load(&table).get()->getNumSamples() / cycles;
+    float cycle = numSamples / cycles;
     
     delta = hz * (cycle / sampleRate);
 }
@@ -21,40 +16,46 @@ float WavetableOscillator::getDelta()
     return delta;
 }
 
-float WavetableOscillator::getNextSample() noexcept
+float WavetableOscillator::getNextSample(juce::AudioSampleBuffer& wt) noexcept
 {
-    auto wt = atomic_load(&table);
-    
-    if (!wt)
+    if (wt.hasBeenCleared())
     {
         return lastSample;
     }
     
-    if (wt.get()->hasBeenCleared())
+    try
     {
-        return lastSample;
-    }
-    
-    auto tableSize = wt.get()->getNumSamples() - 1;
-    auto index0 = (unsigned int) currentIndex;
-    auto index1 = index0 + 1;
+        auto tableSize = wt.getNumSamples() - 1;
+        
+        if (currentIndex >= tableSize)
+        {
+            currentIndex -= (float) tableSize;
+        }
+        
+        auto index0 = (unsigned int) currentIndex;
+        auto index1 = index0 + 1;
 
-    auto frac = currentIndex - (float) index0;
-    
-    auto table = wt.get()->getReadPointer(0);
-    auto value0 = table[index0];
-    auto value1 = table[index1];
-    
-    auto currentSample = value0 + frac * (value1 - value0);
-    
-    if ((currentIndex += delta) >= (float) tableSize)
-    {
-        currentIndex -= (float) tableSize;
+        auto frac = currentIndex - (float) index0;
+        
+        auto table = wt.getReadPointer(0);
+        auto value0 = table[index0];
+        auto value1 = table[index1];
+        
+        auto currentSample = value0 + frac * (value1 - value0);
+        
+        if ((currentIndex += delta) >= (float) tableSize)
+        {
+            currentIndex -= (float) tableSize;
+        }
+        
+        lastSample = currentSample;
+        
+        return currentSample;
     }
-    
-    lastSample = currentSample;
-    
-    return currentSample;
+    catch (const exception& e)
+    {
+        return lastSample;
+    }
 }
 
 void WavetableOscillator::reset()

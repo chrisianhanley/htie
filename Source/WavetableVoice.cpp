@@ -3,7 +3,7 @@
 using namespace juce;
 using namespace std;
 
-WavetableVoice::WavetableVoice(SoundProfile& profile, shared_ptr<juce::AudioSampleBuffer>& t, unsigned int c) : soundProfile(profile), table(t), cycles(c) {}
+WavetableVoice::WavetableVoice(SoundProfile& profile, AudioSampleBuffer& t, unsigned int c) : soundProfile(profile), table(t), cycles(c) {}
 
 WavetableVoice::~WavetableVoice() {}
 
@@ -22,6 +22,6 @@ void WavetableVoice::setOscillators(unsigned int numVoices)
     oscillators.clear();
     
     for (int i = 0; i < numVoices; i++) {
-        oscillators.push_back(WavetableOscillator(table, cycles));
+        oscillators.push_back(WavetableOscillator(cycles));
     }
 }
