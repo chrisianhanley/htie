@@ -6,18 +6,16 @@
 
 #include "Map.h"
 
-using namespace std;
-
 struct IntervalMap
 {
 public:
     IntervalMap();
-    IntervalMap(Map, unordered_map<int, Map>);
+    IntervalMap(Map, std::unordered_map<int, Map>);
     
     ~IntervalMap();
     
     Map baseMap;
-    unordered_map<int, Map> noteMaps;
+    std::unordered_map<int, Map> noteMaps;
     
     static juce::Value getLastKnownFilePath(juce::AudioProcessorValueTreeState*);
     static void resetLastKnownFilePath(juce::AudioProcessorValueTreeState*);

@@ -16,6 +16,7 @@
 #include <fstream>
 
 using namespace juce;
+using namespace std;
 
 // cents = 1200 × log2(ratio)
 // ratio = 2^(1200/cents)
@@ -110,7 +111,15 @@ int PitchMapper::loadIntervalMap(File* json)
                                 auto properties = intervals->getProperties();
                                 for (const auto& prop : properties)
                                 {
-                                    int key = prop.name.toString().getIntValue();
+                                    auto name = prop.name.toString();
+                                    
+                                    if (!std::all_of(name.begin(), name.end(), [] (unsigned char c) { return std::isdigit(c); }))
+                                    {
+                                        return -4;
+                                    }
+                                    
+                                    int key = name.getIntValue();
+                                    
                                     double value = -1;
                                     
                                     if (prop.value.isString())
@@ -178,11 +187,13 @@ int PitchMapper::loadIntervalMap(File* json)
                         for (int i = 0; i <= 11; i++)
                         {
                             juce::String _id = to_string(i);
+                            
                             if (nms->getProperty(_id))
                             {
                                 if (auto* nm = nms->getProperty(_id).getDynamicObject())
                                 {
                                     Map nmObj;
+                                    
                                     auto name = nm->getProperty("name").toString().toStdString();
                                     
                                     if (name.size() > 30)
@@ -202,7 +213,15 @@ int PitchMapper::loadIntervalMap(File* json)
                                             auto interval = intervals->getProperties();
                                             for (const auto& i : interval)
                                             {
-                                                int key = i.name.toString().getIntValue();
+                                                auto n = i.name.toString();
+                                                
+                                                if (!std::all_of(n.begin(), n.end(), [] (unsigned char c) { return std::isdigit(c); }))
+                                                {
+                                                    return -5;
+                                                }
+                                                
+                                                int key = n.getIntValue();
+                                                
                                                 double value = -1;
                                                 
                                                 if (i.value.isString())

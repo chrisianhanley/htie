@@ -58,11 +58,11 @@ public:
     juce::MidiKeyboardState& getKeyboardState();
     
     juce::AudioProcessorValueTreeState& getPluginState();
-    PluginParameters& getParameters();
+    PluginParameters& getPluginParameters();
     PitchMapper& getPitchMapper();
     SynthEngine& getSynthEngine();
     
-    static const juce::String FILE_TEXT_BUFFER_EMPTY;
+    static const juce::String FILE_TEXT_EMPTY;
     
     juce::String fileTextOutput;
     juce::String fileTextBuffer = "";

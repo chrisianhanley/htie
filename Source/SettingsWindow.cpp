@@ -5,12 +5,14 @@ using namespace juce;
 
 SettingsWindow::SettingsWindow(HTIntervalEngineAudioProcessor& p, AudioProcessorEditor& parent) : Window(parent), processor(p)
 {
+    auto rfont = CustomFont::getRegularFont(CustomFont::DEFAULT_SIZE);
+    
     titleLabel.setLookAndFeel(&lookAndFeel);
-    titleLabel.setFont(CustomFont::REGULAR);
+    titleLabel.setFont(rfont);
     titleLabel.setText("SETTINGS", dontSendNotification);
     
     resolutionLabel.setLookAndFeel(&lookAndFeel);
-    resolutionLabel.setFont(CustomFont::REGULAR);
+    resolutionLabel.setFont(rfont);
     resolutionLabel.setText("wavetable resolution: ", dontSendNotification);
 
     resolutionSelection.setLookAndFeel(&lookAndFeel);
@@ -22,7 +24,7 @@ SettingsWindow::SettingsWindow(HTIntervalEngineAudioProcessor& p, AudioProcessor
     resolutionSelection.addItem("4096 samples", 6);
     
     toggleNoteMapLabel.setLookAndFeel(&lookAndFeel);
-    toggleNoteMapLabel.setFont(CustomFont::REGULAR);
+    toggleNoteMapLabel.setFont(rfont);
     toggleNoteMapLabel.setText("toggle note map: ", dontSendNotification);
     
     toggleNoteMapButton.setLookAndFeel(&lookAndFeel);
@@ -37,12 +39,12 @@ SettingsWindow::SettingsWindow(HTIntervalEngineAudioProcessor& p, AudioProcessor
     {
         int res = 1 << (resolutionSelection.getSelectedId() + 6);
         
-        processor.getParameters().wavetableResolutionValue = res;
+        processor.getPluginParameters().wavetableResolutionValue = res;
         
         processor.getSelectedSoundProfile()->update();
     };
     
-    auto state = processor.getParameters().getPluginState();
+    auto state = processor.getPluginParameters().getPluginState();
     resolutionAttachment.reset(new ComboBoxAttachment(*state, "wavetableResolution", resolutionSelection));
     toggleNoteMapAttachment.reset(new ButtonAttachment(*state, "toggleNoteMap", toggleNoteMapButton));
     

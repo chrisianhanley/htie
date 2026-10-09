@@ -38,13 +38,12 @@ CustomLookAndFeel::CustomLookAndFeel()
 
 Font CustomLookAndFeel::getComboBoxFont(juce::ComboBox& box)
 {
-    auto font = CustomFont::REGULAR;
-    return font.withHeight(font.getHeight() + 1.5);
+    return CustomFont::getRegularFont(CustomFont::DEFAULT_SIZE + 1.5);
 }
 
 Font CustomLookAndFeel::getTextButtonFont(juce::TextButton& button, int buttonHeight)
 {
-    return CustomFont::REGULAR;
+    return CustomFont::getRegularFont(CustomFont::DEFAULT_SIZE);
 }
 
 /*

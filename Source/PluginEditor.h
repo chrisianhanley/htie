@@ -50,12 +50,12 @@ private:
     juce::ToggleButton quantizeRootToggle;
     juce::ToggleButton pedalRootToggle;
     
-    unique_ptr<ComboBoxAttachment> keyCenterAttachment;
-    unique_ptr<ComboBoxAttachment> rootInputRangeAttachment;
-    unique_ptr<ButtonAttachment> quantizeRootAttachment;
-    unique_ptr<ButtonAttachment> pedalRootAttachment;
+    std::unique_ptr<ComboBoxAttachment> keyCenterAttachment;
+    std::unique_ptr<ComboBoxAttachment> rootInputRangeAttachment;
+    std::unique_ptr<ButtonAttachment> quantizeRootAttachment;
+    std::unique_ptr<ButtonAttachment> pedalRootAttachment;
     
-    unique_ptr<juce::FileChooser> intervalMapChooser;
+    std::unique_ptr<juce::FileChooser> intervalMapChooser;
     juce::TextButton intervalMapButton;
     juce::TextButton reloadButton;
     juce::Label fileLoadLabel;
@@ -71,9 +71,9 @@ private:
     juce::Label numVoicesLabel;
     juce::ComboBox numVoicesSelection;
     
-    unique_ptr<ComboBoxAttachment> superimposeAttachment;
-    unique_ptr<SliderAttachment> mixAttachment;
-    unique_ptr<ComboBoxAttachment> numVoicesAttachment;
+    std::unique_ptr<ComboBoxAttachment> superimposeAttachment;
+    std::unique_ptr<SliderAttachment> mixAttachment;
+    std::unique_ptr<ComboBoxAttachment> numVoicesAttachment;
     
     void setCurrentWindow(Window* window);
     void keyCenterSelectionChange();

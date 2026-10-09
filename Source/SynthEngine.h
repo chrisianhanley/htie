@@ -40,8 +40,8 @@ public:
     float map(int noteNumber, float transposeCents);
     
 private:
-    int pedalNote = 0;
-    int pedalChannel = 0;
+    int pedalNote;
+    int pedalChannel;
     
     PluginParameters& parameters;
     

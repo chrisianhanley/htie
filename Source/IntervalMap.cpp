@@ -5,6 +5,7 @@
 #include <fstream>
 
 using namespace juce;
+using namespace std;
 
 IntervalMap::IntervalMap() : baseMap(Map()), noteMaps() {}
 

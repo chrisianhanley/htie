@@ -7,6 +7,7 @@
 #include "ElectricPianoWindow.h"
 
 using namespace juce;
+using namespace std;
 
 //==============================================================================
 
@@ -14,6 +15,9 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
 : AudioProcessorEditor(&p), processor(p), keyboardComponent(processor.getKeyboardState(), MidiKeyboardComponent::horizontalKeyboard)
 {
     auto& pluginState = processor.getPluginState();
+    
+    auto rfont = CustomFont::getRegularFont(CustomFont::DEFAULT_SIZE);
+    auto ifont = CustomFont::getItalicFont(CustomFont::DEFAULT_SIZE);
     
     LookAndFeel::getDefaultLookAndFeel().setDefaultSansSerifTypefaceName(CustomFont::TYPEFACE_NAME);
     
@@ -27,18 +31,18 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     volumeSlider.setPopupDisplayEnabled(true, false, this);
     volumeSlider.setRange(-100, -12, 0.1);
     volumeSlider.setSkewFactor(5);
-    volumeSlider.setValue(Decibels::gainToDecibels(processor.getParameters().gainValue.load()));
+    volumeSlider.setValue(Decibels::gainToDecibels(processor.getPluginParameters().gainValue.load()));
     volumeSlider.onValueChange = [this]
     {
         auto gain = Decibels::decibelsToGain((double) volumeSlider.getValue());
         
-        processor.getParameters().gainValue = gain;
+        processor.getPluginParameters().gainValue = gain;
     };
     
     // key center
     keyCenterLabel.setLookAndFeel(&lookAndFeel);
     keyCenterSelection.setLookAndFeel(&lookAndFeel);
-    keyCenterLabel.setFont(CustomFont::REGULAR);
+    keyCenterLabel.setFont(rfont);
     keyCenterLabel.setText("key: ", dontSendNotification);
     keyCenterSelection.addItem("C", 1);
     keyCenterSelection.addItem("C#", 2);
@@ -58,37 +62,37 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     // root input range
     rootInputRangeLabel.setLookAndFeel(&lookAndFeel);
     rootInputRangeSelection.setLookAndFeel(&lookAndFeel);
-    rootInputRangeLabel.setFont(CustomFont::REGULAR);
+    rootInputRangeLabel.setFont(rfont);
     rootInputRangeLabel.setText("input range: ", dontSendNotification);
-    rootInputRangeSelection.addItem("C-2 - C-1", 1);
-    rootInputRangeSelection.addItem("C-1 - C0", 2);
-    rootInputRangeSelection.addItem("C0 - C1", 3);
-    rootInputRangeSelection.addItem("C1 - C2", 4);
-    rootInputRangeSelection.addItem("C2 - C3", 5);
-    rootInputRangeSelection.addItem("C3 - C4", 6);
-    rootInputRangeSelection.addItem("C4 - C5", 7);
-    rootInputRangeSelection.addItem("C5 - C6", 8);
-    rootInputRangeSelection.addItem("C6 - C7", 9);
-    rootInputRangeSelection.addItem("C7 - C8", 10);
+    rootInputRangeSelection.addItem("C-2 - B-2", 1);
+    rootInputRangeSelection.addItem("C-1 - B-1", 2);
+    rootInputRangeSelection.addItem("C0 - B0", 3);
+    rootInputRangeSelection.addItem("C1 - B1", 4);
+    rootInputRangeSelection.addItem("C2 - B2", 5);
+    rootInputRangeSelection.addItem("C3 - B3", 6);
+    rootInputRangeSelection.addItem("C4 - B4", 7);
+    rootInputRangeSelection.addItem("C5 - B5", 8);
+    rootInputRangeSelection.addItem("C6 - B6", 9);
+    rootInputRangeSelection.addItem("C7 - B7", 10);
     rootInputRangeAttachment.reset(new ComboBoxAttachment(pluginState, "rootInputRange", rootInputRangeSelection));
     
     // quantize root
     quantizeRootLabel.setLookAndFeel(&lookAndFeel);
     quantizeRootToggle.setLookAndFeel(&lookAndFeel);
-    quantizeRootLabel.setFont(CustomFont::REGULAR);
+    quantizeRootLabel.setFont(rfont);
     quantizeRootLabel.setText("quantize: ", dontSendNotification);
     quantizeRootAttachment.reset(new ButtonAttachment(pluginState, "quantizeRoot", quantizeRootToggle));
     
     // pedal root
     pedalRootLabel.setLookAndFeel(&lookAndFeel);
     pedalRootToggle.setLookAndFeel(&lookAndFeel);
-    pedalRootLabel.setFont(CustomFont::REGULAR);
+    pedalRootLabel.setFont(rfont);
     pedalRootLabel.setText("pedal: ", NotificationType::dontSendNotification);
     pedalRootAttachment.reset(new ButtonAttachment(pluginState, "pedalRoot", pedalRootToggle));
     
     // current root
     currentRootIntervalLabel.setLookAndFeel(&lookAndFeel);
-    currentRootIntervalLabel.setFont(CustomFont::ITALIC);
+    currentRootIntervalLabel.setFont(ifont);
     currentRootIntervalLabel.setJustificationType(Justification::right);
     //processor.pitchMapper.onRootIntervalChangeAsync = [this] { updateCurrentRootIntervalText(); };
 
@@ -96,7 +100,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     intervalMapButton.setLookAndFeel(&lookAndFeel);
     intervalMapButton.setButtonText("<load interval map>");
     fileLoadLabel.setLookAndFeel(&lookAndFeel);
-    fileLoadLabel.setFont(CustomFont::ITALIC);
+    fileLoadLabel.setFont(ifont);
     
     intervalMapChooser = std::make_unique<FileChooser>("Select interval map to load...", File::getSpecialLocation(File::userHomeDirectory), "*.json");
     
@@ -154,7 +158,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
             }
             else
             {
-                proc.fileTextBuffer = proc.FILE_TEXT_BUFFER_EMPTY;
+                proc.fileTextBuffer = proc.FILE_TEXT_EMPTY;
             }
             
             if (result == 0)
@@ -169,7 +173,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
                 {
                     IntervalMap::resetLastKnownFilePath(&proc.getPluginState());
                     
-                    proc.fileTextBuffer = proc.FILE_TEXT_BUFFER_EMPTY;
+                    proc.fileTextBuffer = proc.FILE_TEXT_EMPTY;
                 }
             }
             
@@ -372,7 +376,7 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
     
     if (processor.fileTextOutput.isEmpty())
     {
-        processor.fileTextOutput = processor.FILE_TEXT_BUFFER_EMPTY;
+        processor.fileTextOutput = processor.FILE_TEXT_EMPTY;
     }
     
     fileLoadLabel.setText(processor.fileTextOutput, dontSendNotification);
@@ -533,12 +537,13 @@ void HTIntervalEngineAudioProcessorEditor::resized()
 }
 
 void HTIntervalEngineAudioProcessorEditor::calculateDynamicComponentBounds(Rectangle<int>& bounds) {
+    auto rfont = CustomFont::getRegularFont(CustomFont::DEFAULT_SIZE);
     auto margin = CustomFont::DEFAULT_SIZE + 15;
     auto buffer = bounds.removeFromTop(margin);
     
     buffer.translate(5, 3);
     
-    intervalMapButton.setBounds(buffer.removeFromLeft(GlyphArrangement::getStringWidth(CustomFont::REGULAR, intervalMapButton.getButtonText()) + 20));
+    intervalMapButton.setBounds(buffer.removeFromLeft(GlyphArrangement::getStringWidth(rfont, intervalMapButton.getButtonText()) + 20));
     fileLoadLabel.setBounds(buffer.removeFromLeft(GlyphArrangement::getStringWidth(fileLoadLabel.getFont(), fileLoadLabel.getText()) + 20));
     
     buffer.translate(-7, 0);

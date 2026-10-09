@@ -31,6 +31,6 @@ private:
     
     juce::ToggleButton toggleNoteMapButton;
     
-    unique_ptr<ComboBoxAttachment> resolutionAttachment;
-    unique_ptr<ButtonAttachment> toggleNoteMapAttachment;
+    std::unique_ptr<ComboBoxAttachment> resolutionAttachment;
+    std::unique_ptr<ButtonAttachment> toggleNoteMapAttachment;
 };

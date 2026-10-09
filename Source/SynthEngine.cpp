@@ -18,6 +18,7 @@ using namespace juce;
 SynthEngine::SynthEngine(PluginParameters& p, PitchMapper& m) : parameters(p), pitchMapper(m)
 {
     pedalNote = -1;
+    pedalChannel = 0;
 }
 
 void SynthEngine::redrawVoices()
@@ -111,7 +112,7 @@ float SynthEngine::map(int noteNumber, float transposeCents)
         
         if (*parameters.keyCenterParameter - 1 > current)
         {
-            return pitchMapper.map(noteNumber, transposeCents, true);
+            return pitchMapper.map(noteNumber, transposeCents, false);
         }
     }
 

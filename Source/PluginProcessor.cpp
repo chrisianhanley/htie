@@ -8,10 +8,11 @@
 //==============================================================================
 
 using namespace juce;
+using namespace std;
 
 //using Parameter = AudioProcessorValueTreeState::Parameter;
 
-const String HTIntervalEngineAudioProcessor::FILE_TEXT_BUFFER_EMPTY = "[empty]";
+const String HTIntervalEngineAudioProcessor::FILE_TEXT_EMPTY = "[empty]";
 
 HTIntervalEngineAudioProcessor::HTIntervalEngineAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -22,7 +23,7 @@ HTIntervalEngineAudioProcessor::HTIntervalEngineAudioProcessor()
                       #endif
                        .withOutput("Output", AudioChannelSet::stereo(), true)
                      #endif
-                      ), fileTextOutput(FILE_TEXT_BUFFER_EMPTY), pluginState(*this, nullptr, Identifier("HTIntervalEngine"), createLayout()), pitchMapper(parameters), synthEngine(parameters, pitchMapper)
+                      ), fileTextOutput(FILE_TEXT_EMPTY), pluginState(*this, nullptr, Identifier("HTIntervalEngine"), createLayout()), pitchMapper(parameters), synthEngine(parameters, pitchMapper)
 #endif
 {
     parameters.createReferences(&pluginState);
@@ -62,7 +63,7 @@ AudioProcessorValueTreeState& HTIntervalEngineAudioProcessor::getPluginState()
     return pluginState;
 }
 
-PluginParameters& HTIntervalEngineAudioProcessor::getParameters()
+PluginParameters& HTIntervalEngineAudioProcessor::getPluginParameters()
 {
     return parameters;
 }
@@ -440,7 +441,7 @@ void HTIntervalEngineAudioProcessor::setStateInformation(const void* data, int s
             }
             else
             {
-                fileTextOutput = FILE_TEXT_BUFFER_EMPTY;
+                fileTextOutput = FILE_TEXT_EMPTY;
             }
             
             selectedSoundProfile->update();

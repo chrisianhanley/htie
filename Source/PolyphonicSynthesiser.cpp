@@ -26,6 +26,7 @@ void PolyphonicSynthesiserVoice::setCurrentPlaybackSampleRate(double rate)
     }
     
     frequency.reset(rate, 0.05);
+    gain.reset(rate, 0.05);
 }
 
 void PolyphonicSynthesiserVoice::setOscillators(unsigned int numVoices)
