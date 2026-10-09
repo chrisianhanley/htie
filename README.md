@@ -23,19 +23,19 @@ below is an interval map labeled "just intonation" with specified note maps. int
   },
   
   "notemaps": {
-    "4": {
-      "name": "undecimal neutral third",
-      "intervals": {
-        "3": "11:9",
-        "4": "11:9"
-      }
-    },
-
     "3": {
       "name": "subminor third",
       "intervals": {
         "3": "7:6",
         "4": "7:6"
+      }
+    },
+
+    "4": {
+      "name": "undecimal neutral third",
+      "intervals": {
+        "3": "11:9",
+        "4": "11:9"
       }
     },
     
