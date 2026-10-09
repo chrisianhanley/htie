@@ -1,4 +1,4 @@
-# json format/interval map
+# json format
 
 below is an interval map labeled "just intonation" with specified note maps. intervals can be either ratio or cent values. basemap must contain all 12 intervals. hold shift to reload.
 
