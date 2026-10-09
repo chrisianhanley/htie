@@ -13,7 +13,7 @@
   },
   "Classes": [
     {
-      "CID": "ABCDEF019182FAEB4D616E7544367331",
+      "CID": "ABCDEF019182FAEB4854494544367331",
       "Category": "Audio Module Class",
       "Name": "HTIntervalEngine",
       "Vendor": "Ian Hanley",
@@ -29,7 +29,7 @@
       ],
     },
     {
-      "CID": "ABCDEF011234ABCD4D616E7544367331",
+      "CID": "ABCDEF011234ABCD4854494544367331",
       "Category": "Component Controller Class",
       "Name": "HTIntervalEngine",
       "Vendor": "Ian Hanley",

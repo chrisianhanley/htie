@@ -6,11 +6,11 @@
 	<array>
 		<dict>
 			<key>description</key>
-			<string>microtonal synth engine</string>
+			<string>a microtonal synth engine</string>
 			<key>factoryFunction</key>
 			<string>HTIntervalEngineAUFactory</string>
 			<key>manufacturer</key>
-			<string>Manu</string>
+			<string>HTIE</string>
 			<key>name</key>
 			<string>Ian Hanley: HTIntervalEngine</string>
 			<key>resourceUsage</key>

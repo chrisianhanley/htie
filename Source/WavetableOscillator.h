@@ -5,7 +5,7 @@
 class WavetableOscillator
 {
 public:
-    WavetableOscillator(juce::AudioSampleBuffer& table, unsigned int cycles);
+    WavetableOscillator(std::shared_ptr<juce::AudioSampleBuffer> table, unsigned int cycles);
 
     void setFrequency(float frequency, float sampleRate);
     
@@ -15,7 +15,7 @@ public:
     void reset();
     
 private:
-    juce::AudioSampleBuffer& wavetable;
+    std::shared_ptr<juce::AudioSampleBuffer> wavetable;
     
     const unsigned int cycles;
 

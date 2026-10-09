@@ -2,14 +2,16 @@
 
 using namespace std;
 
-WavetableOscillator::WavetableOscillator(juce::AudioSampleBuffer& table, unsigned int c) : wavetable(table), cycles(c), delta(0), currentIndex(0), lastSample(0)
+WavetableOscillator::WavetableOscillator(shared_ptr<juce::AudioSampleBuffer> table, unsigned int c) : wavetable(table), cycles(c), delta(0), currentIndex(0), lastSample(0)
 {
-    jassert(wavetable.getNumChannels() == 1);
+    jassert(table);
+    
+    jassert(table->getNumChannels() == 1);
 }
 
 void WavetableOscillator::setFrequency(float hz, float sampleRate)
 {
-    float cycle = wavetable.getNumSamples() / cycles;
+    float cycle = atomic_load(&wavetable).get()->getNumSamples() / cycles;
     
     delta = hz * (cycle / sampleRate);
 }
@@ -21,18 +23,25 @@ float WavetableOscillator::getDelta()
 
 float WavetableOscillator::getNextSample() noexcept
 {
-    if (wavetable.hasBeenCleared())
+    auto wt = atomic_load(&wavetable);
+    
+    if (!wt)
     {
         return lastSample;
     }
     
-    auto tableSize = wavetable.getNumSamples() - 1;
+    if (wt.get()->hasBeenCleared())
+    {
+        return lastSample;
+    }
+    
+    auto tableSize = wt.get()->getNumSamples() - 1;
     auto index0 = (unsigned int) currentIndex;
     auto index1 = index0 + 1;
 
     auto frac = currentIndex - (float) index0;
     
-    auto table = wavetable.getReadPointer(0);
+    auto table = wavetable.get()->getReadPointer(0);
     auto value0 = table[index0];
     auto value1 = table[index1];
     

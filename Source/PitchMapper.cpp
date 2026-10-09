@@ -150,7 +150,7 @@ int PitchMapper::loadIntervalMap(File* json)
                             }
                             else
                             {
-                                return -5;
+                                return -4;
                             }
                         }
                         else
@@ -160,7 +160,7 @@ int PitchMapper::loadIntervalMap(File* json)
                     }
                     else
                     {
-                        return -6;
+                        return -3;
                     }
                 }
                 else
@@ -194,47 +194,47 @@ int PitchMapper::loadIntervalMap(File* json)
                                     {
                                         cout << "loading note map [" + name + "]" << endl;
                                         
-                                         if (auto* intervals = nm->getProperty("intervals").getDynamicObject())
-                                         {
-                                             auto interval = intervals->getProperties();
-                                             for (const auto& i : interval)
-                                             {
-                                                 int key = i.name.toString().getIntValue();
-                                                 double value = -1;
-                                                 
-                                                 if (i.value.isString())
-                                                 {
-                                                     auto ratio = ratioToDecimal(i.value.toString().toStdString());
-                                                     
-                                                     if (ratio == 0)
-                                                     {
-                                                         return -2;
-                                                     }
-                                                     
-                                                     auto cents = ratioToCents(ratio);
-                                                     
-                                                     value = cents;
-                                                 }
-                                                 else if (i.value.isInt() || i.value.isDouble())
-                                                 {
-                                                     value = (double) i.value;
-                                                 }
-                                                 
-                                                 if (value >= 0)
-                                                 {
-                                                     nmObj.map[key] = value;
-                                                     
-                                                     cout << to_string(key) + " -> " + to_string(value) << endl;
-                                                 }
-                                                 else
-                                                 {
-                                                     return -5;
-                                                 }
-                                             }
-                                         }
+                                        if (auto* intervals = nm->getProperty("intervals").getDynamicObject())
+                                        {
+                                            auto interval = intervals->getProperties();
+                                            for (const auto& i : interval)
+                                            {
+                                                int key = i.name.toString().getIntValue();
+                                                double value = -1;
+                                                
+                                                if (i.value.isString())
+                                                {
+                                                    auto ratio = ratioToDecimal(i.value.toString().toStdString());
+                                                    
+                                                    if (ratio == 0)
+                                                    {
+                                                        return -2;
+                                                    }
+                                                    
+                                                    auto cents = ratioToCents(ratio);
+                                                    
+                                                    value = cents;
+                                                }
+                                                else if (i.value.isInt() || i.value.isDouble())
+                                                {
+                                                    value = (double) i.value;
+                                                }
+                                                
+                                                if (value >= 0)
+                                                {
+                                                    nmObj.map[key] = value;
+                                                    
+                                                    cout << to_string(key) + " -> " + to_string(value) << endl;
+                                                }
+                                                else
+                                                {
+                                                    return -5;
+                                                }
+                                            }
+                                        }
                                         else
                                         {
-                                            return -6;
+                                            return -5;
                                         }
                                     }
                                     else
@@ -250,6 +250,10 @@ int PitchMapper::loadIntervalMap(File* json)
                     }
                 }
             }
+        }
+        else
+        {
+            return -2;
         }
     }
     catch (const exception& e)
@@ -504,11 +508,11 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
 {
     const float startingFrequency = MidiMessage::getMidiNoteInHertz(midiNoteNumber);
     
-    if (auto im = getCurrentIntervalMap().get())
+    if (auto im = getCurrentIntervalMap())
     {
         auto name = getNoteNumberAsNote(midiNoteNumber);
         
-        auto& baseMap = im->baseMap;
+        auto& baseMap = im.get()->baseMap;
         auto rootNote = getCurrentRootAsSemitones() + root;
         
         rootNote %= 12;
@@ -548,7 +552,7 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
             return startingFrequency;
         }
         
-        auto& nms = im->noteMaps;
+        auto& nms = im.get()->noteMaps;
         if (useNoteMap && nms.find(selectedNoteMapIndex) != nms.end() && nms.at(selectedNoteMapIndex).map.find(interval) != nms.at(selectedNoteMapIndex).map.end())
         {
             if (inputNote != rootNote)
@@ -611,6 +615,11 @@ bool PitchMapper::isSubstituted(unsigned int noteNumber)
 shared_ptr<IntervalMap> PitchMapper::getCurrentIntervalMap()
 {
     auto im = atomic_load(&currentIntervalMap);
+    
+    if (!im)
+    {
+        return nullptr;
+    }
     
     if (im->baseMap.map.empty())
     {

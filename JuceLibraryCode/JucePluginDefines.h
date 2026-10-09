@@ -44,7 +44,7 @@
  #define JucePlugin_Name                   "HTIntervalEngine"
 #endif
 #ifndef  JucePlugin_Desc
- #define JucePlugin_Desc                   "microtonal synth engine"
+ #define JucePlugin_Desc                   "a microtonal synth engine"
 #endif
 #ifndef  JucePlugin_Manufacturer
  #define JucePlugin_Manufacturer           "Ian Hanley"
@@ -56,7 +56,7 @@
  #define JucePlugin_ManufacturerEmail      "ianhanley100@gmail.com"
 #endif
 #ifndef  JucePlugin_ManufacturerCode
- #define JucePlugin_ManufacturerCode       0x4d616e75
+ #define JucePlugin_ManufacturerCode       0x48544945
 #endif
 #ifndef  JucePlugin_PluginCode
  #define JucePlugin_PluginCode             0x44367331

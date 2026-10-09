@@ -3,7 +3,7 @@
 using namespace juce;
 using namespace std;
 
-WavetableVoice::WavetableVoice(SoundProfile& profile, AudioSampleBuffer& t, unsigned int c) : soundProfile(profile), table(t), cycles(c) {}
+WavetableVoice::WavetableVoice(SoundProfile& profile, shared_ptr<juce::AudioSampleBuffer> t, unsigned int c) : soundProfile(profile), table(t), cycles(c) {}
 
 WavetableVoice::~WavetableVoice() {}
 

@@ -6,7 +6,7 @@
 using namespace juce;
 using namespace std;
 
-PolyphonicSynthesiserVoice::PolyphonicSynthesiserVoice(SoundProfile& profile, AudioSampleBuffer& table) : WavetableVoice(profile, table, 4)
+PolyphonicSynthesiserVoice::PolyphonicSynthesiserVoice(SoundProfile& profile, shared_ptr<juce::AudioSampleBuffer> table) : WavetableVoice(profile, table, 4)
 {
     if (*soundProfile.parameters.numVoicesParameter < 1)
     {
@@ -212,7 +212,7 @@ PolyphonicSynthesiser::PolyphonicSynthesiser(SynthEngine& engine, PitchMapper& p
 
 PolyphonicSynthesiser::~PolyphonicSynthesiser()
 {
-    wavetable.clear();
+    atomic_load(&wavetable).reset();
 }
 
 juce::String PolyphonicSynthesiser::getDisplayName()
@@ -241,7 +241,7 @@ void PolyphonicSynthesiser::enable()
 
 void PolyphonicSynthesiser::update()
 {
-    
+    createTable();
 }
 
 void PolyphonicSynthesiser::disable()
@@ -322,7 +322,7 @@ void PolyphonicSynthesiser::createTable()
     
     samples[totalSize] = samples[0];
     
-    wavetable = buffer;
+    atomic_store(&wavetable, make_shared<AudioSampleBuffer>(buffer));
     
-    //cout << "created wavetable with resolution [" + to_string(size) + "]" << endl;
+    cout << "created wavetable with resolution [" + to_string(size) + "]" << endl;
 }
