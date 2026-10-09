@@ -235,6 +235,8 @@ void PolyphonicSynthesiser::enable()
     
     synth.addSound(new PolyphonicSynthesiserSound());
     
+    wavetable.setSize(1, 4096 * 4 + 1);
+    
     createTable();
 }
 
@@ -265,7 +267,7 @@ void PolyphonicSynthesiser::createTable()
     auto delta = period / size;
     auto angle = 0.0;
     
-    wavetable.setSize(1, totalSize + 1);
+    wavetable.setSize(1, totalSize + 1, false, false, true);
     
     auto samples = wavetable.getWritePointer(0);
     
