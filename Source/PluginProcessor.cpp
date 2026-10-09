@@ -301,7 +301,7 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
                 // calculate distance from current midi note to key center to compare to the root interval
                 auto keyInterval = pitchMapper.getInterval(*parameters.keyCenterParameter - 1, currentSemitones);
                 
-                if (pitchMapper.getCurrentIntervalMap().get() && currentNoteNumber != lastRootNote)
+                if (pitchMapper.getCurrentIntervalMap() && currentNoteNumber != lastRootNote)
                 {
                     // cancel operation if current note is identical to the root note, wait for additional input
                     if (keyInterval == pitchMapper.getCurrentRootInterval())
@@ -432,11 +432,11 @@ void HTIntervalEngineAudioProcessor::setStateInformation(const void* data, int s
                 pitchMapper.loadIntervalMap(&file);
             }
             
-            auto map = pitchMapper.getCurrentIntervalMap().get();
+            auto map = pitchMapper.getCurrentIntervalMap();
             
             if (map)
             {
-                fileTextOutput = "[" + map->baseMap.name + "]";
+                fileTextOutput = "[" + map.get()->baseMap.name + "]";
             }
             else
             {

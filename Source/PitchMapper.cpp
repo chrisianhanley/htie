@@ -28,7 +28,7 @@ unordered_map<String, int> PitchMapper::noteToSemitones = {
     { "F#", 6 }, { "G", 7 }, { "G#", 8 }, { "A", 9 }, { "A#", 10 }, { "B", 11 }
 };
 
-PitchMapper::PitchMapper(PluginParameters& p) : parameters(p), currentIntervalMap(nullptr) {}
+PitchMapper::PitchMapper(PluginParameters& p) : parameters(p), currentIntervalMap() {}
 
 float PitchMapper::ratioToDecimal(string ratio)
 {
@@ -38,10 +38,22 @@ float PitchMapper::ratioToDecimal(string ratio)
     stringstream stream(ratio);
     string segment;
     
-    getline(stream, segment, ':');
-    a = round(stoi(segment));
-    getline(stream, segment, ':');
-    b = round(stoi(segment));
+    try
+    {
+        getline(stream, segment, ':');
+        a = round(stoi(segment));
+        getline(stream, segment, ':');
+        b = round(stoi(segment));
+    }
+    catch (const exception& e)
+    {
+        return 0;
+    }
+    
+    if (a == 0 || b == 0)
+    {
+        return 0;
+    }
     
     cout << "converted ratio: " + to_string((int) a) + ":" + to_string((int) b) + " = " + to_string(a / b) << endl;
     
@@ -58,6 +70,7 @@ float PitchMapper::centsToRatio(float cents)
     return pow(2, cents / 1200);
 }
 
+// error codes: 0 = success, -1 = file not found, -2 = parsing error, -3 = basemap not found, -4 = invalid basemap, -5 = invalid notemap, -6 = unknown error
 int PitchMapper::loadIntervalMap(File* json)
 {
     if (!json->existsAsFile())
@@ -70,129 +83,178 @@ int PitchMapper::loadIntervalMap(File* json)
     Map baseMap;
     unordered_map<int, Map> noteMaps;
     
-    if (contents.isObject())
+    try
     {
-        if (auto* obj = contents.getDynamicObject())
+        if (contents.isObject())
         {
-            if (obj->getProperty("basemap"))
+            if (auto* obj = contents.getDynamicObject())
             {
-                if (auto* bmp = obj->getProperty("basemap").getDynamicObject())
+                if (obj->getProperty("basemap"))
                 {
-                    auto name = bmp->getProperty("name").toString().toStdString();
-                    if (name.size() > 30)
+                    if (auto* bmp = obj->getProperty("basemap").getDynamicObject())
                     {
-                        name.resize(30);
-                        name.append("...");
-                    }
-                    
-                    baseMap.name = name;
-                    
-                    if (bmp->getProperty("intervals"))
-                    {
-                        if (auto* intervals = bmp->getProperty("intervals").getDynamicObject())
+                        auto name = bmp->getProperty("name").toString().toStdString();
+                        if (name.size() > 30)
                         {
-                            cout << "loading interval map [" + name + "]" << endl;
-                            auto properties = intervals->getProperties();
-                            for (const auto& prop : properties)
+                            name.resize(30);
+                            name.append("...");
+                        }
+                        
+                        baseMap.name = name;
+                        
+                        if (bmp->getProperty("intervals"))
+                        {
+                            if (auto* intervals = bmp->getProperty("intervals").getDynamicObject())
                             {
-                                int key = prop.name.toString().getIntValue();
-                                double value = -1;
-                                
-                                if (prop.value.isString())
+                                cout << "loading interval map [" + name + "]" << endl;
+                                auto properties = intervals->getProperties();
+                                for (const auto& prop : properties)
                                 {
-                                    auto ratio = ratioToDecimal(prop.value.toString().toStdString());
-                                    auto cents = ratioToCents(ratio);
+                                    int key = prop.name.toString().getIntValue();
+                                    double value = -1;
                                     
-                                    value = cents;
+                                    if (prop.value.isString())
+                                    {
+                                        auto ratio = ratioToDecimal(prop.value.toString().toStdString());
+                                        
+                                        if (ratio == 0)
+                                        {
+                                            return -2;
+                                        }
+                                        
+                                        auto cents = ratioToCents(ratio);
+                                        
+                                        value = cents;
+                                    }
+                                    else if (prop.value.isInt() || prop.value.isDouble())
+                                    {
+                                        value = (double) prop.value;
+                                    }
+                                    
+                                    if (value >= 0)
+                                    {
+                                        baseMap.map[key] = value;
+                                        
+                                        cout << to_string(key) + " -> " + to_string(value) << endl;
+                                    }
+                                    else
+                                    {
+                                        return -4;
+                                    }
                                 }
-                                else if (prop.value.isInt() || prop.value.isDouble())
-                                {
-                                    value = (double) prop.value;
-                                }
                                 
-                                if (value >= 0)
+                                if (baseMap.map.size() != 12)
                                 {
-                                    baseMap.map[key] = value;
-                                    
-                                    cout << to_string(key) + " -> " + to_string(value) << endl;
-                                    
-                                    
+                                    return -2;
                                 }
                             }
-                            
-                            if (baseMap.map.size() != 12)
+                            else
                             {
-                                return -2;
+                                return -5;
                             }
                         }
+                        else
+                        {
+                            return -4;
+                        }
+                    }
+                    else
+                    {
+                        return -6;
                     }
                 }
-            }
-            
-            if (obj->getProperty("notemaps"))
-            {
-                if (auto* nms = obj->getProperty("notemaps").getDynamicObject())
+                else
                 {
-                    for (int i = 0; i <= 11; i++)
+                    return -3;
+                }
+                
+                if (obj->getProperty("notemaps"))
+                {
+                    if (auto* nms = obj->getProperty("notemaps").getDynamicObject())
                     {
-                        juce::String _id = to_string(i);
-                        if (nms->getProperty(_id))
+                        for (int i = 0; i <= 11; i++)
                         {
-                            if (auto* nm = nms->getProperty(_id).getDynamicObject())
+                            juce::String _id = to_string(i);
+                            if (nms->getProperty(_id))
                             {
-                                Map nmObj;
-                                auto name = nm->getProperty("name").toString().toStdString();
-                                
-                                if (name.size() > 30)
+                                if (auto* nm = nms->getProperty(_id).getDynamicObject())
                                 {
-                                    name.resize(30);
-                                    name.append("...");
-                                }
-                                
-                                nmObj.name = name;
-                                
-                                if (nm->getProperty("intervals"))
-                                {
-                                    cout << "loading note map [" + name + "]" << endl;
+                                    Map nmObj;
+                                    auto name = nm->getProperty("name").toString().toStdString();
                                     
-                                     if (auto* intervals = nm->getProperty("intervals").getDynamicObject())
-                                     {
-                                         auto interval = intervals->getProperties();
-                                         for (const auto& i : interval)
+                                    if (name.size() > 30)
+                                    {
+                                        name.resize(30);
+                                        name.append("...");
+                                    }
+                                    
+                                    nmObj.name = name;
+                                    
+                                    if (nm->getProperty("intervals"))
+                                    {
+                                        cout << "loading note map [" + name + "]" << endl;
+                                        
+                                         if (auto* intervals = nm->getProperty("intervals").getDynamicObject())
                                          {
-                                             int key = i.name.toString().getIntValue();
-                                             double value = -1;
-                                             
-                                             if (i.value.isString())
+                                             auto interval = intervals->getProperties();
+                                             for (const auto& i : interval)
                                              {
-                                                 auto ratio = ratioToDecimal(i.value.toString().toStdString());
-                                                 auto cents = ratioToCents(ratio);
+                                                 int key = i.name.toString().getIntValue();
+                                                 double value = -1;
                                                  
-                                                 value = cents;
-                                             }
-                                             else if (i.value.isInt() || i.value.isDouble())
-                                             {
-                                                 value = (double) i.value;
-                                             }
-                                             
-                                             if (value >= 0)
-                                             {
-                                                 nmObj.map[key] = value;
+                                                 if (i.value.isString())
+                                                 {
+                                                     auto ratio = ratioToDecimal(i.value.toString().toStdString());
+                                                     
+                                                     if (ratio == 0)
+                                                     {
+                                                         return -2;
+                                                     }
+                                                     
+                                                     auto cents = ratioToCents(ratio);
+                                                     
+                                                     value = cents;
+                                                 }
+                                                 else if (i.value.isInt() || i.value.isDouble())
+                                                 {
+                                                     value = (double) i.value;
+                                                 }
                                                  
-                                                 cout << to_string(key) + " -> " + to_string(value) << endl;
+                                                 if (value >= 0)
+                                                 {
+                                                     nmObj.map[key] = value;
+                                                     
+                                                     cout << to_string(key) + " -> " + to_string(value) << endl;
+                                                 }
+                                                 else
+                                                 {
+                                                     return -5;
+                                                 }
                                              }
                                          }
-                                     }
-                                }
+                                        else
+                                        {
+                                            return -6;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        return -5;
+                                    }
 
-                                int key = _id.getIntValue();
-                                noteMaps[key] = nmObj;
+                                    int key = _id.getIntValue();
+                                    noteMaps[key] = nmObj;
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+    catch (const exception& e)
+    {
+        return -6;
     }
     
     /*
@@ -219,14 +281,14 @@ int PitchMapper::loadIntervalMap(File* json)
     
     atomic_store(&currentIntervalMap, make_shared<IntervalMap>(baseMap, noteMaps));
     
-    auto im = getCurrentIntervalMap().get();
+    auto im = getCurrentIntervalMap();
     
     auto path = IntervalMap::getLastKnownFilePath(parameters.getPluginState());
     path.setValue(json->getFullPathName());
     
     setNoteMap(0, false);
     
-    cout << "successfully loaded interval map [" + im->baseMap.name + "]" << endl;
+    cout << "successfully loaded interval map [" + im.get()->baseMap.name + "]" << endl;
     return 0;
 }
 
@@ -237,7 +299,7 @@ int PitchMapper::getSelectedNoteMapIndex()
 
 int PitchMapper::setNoteMap(unsigned int index, bool notify)
 {
-    auto im = getCurrentIntervalMap().get();
+    auto im = getCurrentIntervalMap();
     
     if (!im)
     {
@@ -359,11 +421,11 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
 {
     const float startingFrequency = MidiMessage::getMidiNoteInHertz(midiNoteNumber);
     
-    if (auto im = getCurrentIntervalMap().get())
+    if (auto im = getCurrentIntervalMap())
     {
         auto name = getNoteNumberAsNote(midiNoteNumber);
         
-        auto& baseMap = im->baseMap;
+        auto& baseMap = im.get()->baseMap;
         auto rootNote = getCurrentRootAsSemitones();
         auto inputNote = getNoteAsSemitones(name);
         auto interval = getInterval(rootNote, inputNote);
@@ -374,7 +436,7 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
         
         float mappedFrequency = startingFrequency;
         
-        cout << "mapped " + name + " to " + to_string(interval) << endl;
+        //cout << "mapped " + name + " to " + to_string(interval) << endl;
         
         if (*parameters.quantizeRootParameter == 0)
         {
@@ -382,20 +444,20 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
             targetCents = baseMap.map.at(currentRootInterval);
             difference = targetCents - startCents;
             
-            cout << "root difference: " + to_string(difference) << endl;
+            //cout << "root difference: " + to_string(difference) << endl;
             
             if (inputNote == rootNote)
             {
                 mappedFrequency = startingFrequency * centsToRatio(difference);
                 
-                cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
+                //cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
                 
                 return mappedFrequency;
             }
         }
         else if (inputNote == rootNote)
         {
-            cout << "note is root, quantized" << endl;
+            //cout << "note is root, quantized" << endl;
             
             return startingFrequency;
         }
@@ -411,8 +473,8 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
                 
                 mappedFrequency = startingFrequency * centsToRatio(difference);
                 
-                cout << "difference: " + to_string(difference) << endl;
-                cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
+                //cout << "difference: " + to_string(difference) << endl;
+                //cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
             }
         }
         else
@@ -423,8 +485,8 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
             
             mappedFrequency = startingFrequency * centsToRatio(difference);
             
-            cout << "total difference: " + to_string(difference) << endl;
-            cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
+            //cout << "total difference: " + to_string(difference) << endl;
+            //cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
         }
         
         return mappedFrequency;
@@ -460,7 +522,7 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
         
         float mappedFrequency = startingFrequency;
         
-        cout << "mapped " + name + " to " + to_string(interval) << endl;
+        //cout << "mapped " + name + " to " + to_string(interval) << endl;
         
         if (*parameters.quantizeRootParameter == 0)
         {
@@ -468,20 +530,20 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
             targetCents = baseMap.map.at(currentRootInterval);
             difference = targetCents - startCents;
             
-            cout << "root difference: " + to_string(difference) << endl;
+            //cout << "root difference: " + to_string(difference) << endl;
             
             if (inputNote == rootNote)
             {
                 mappedFrequency = startingFrequency * centsToRatio(difference);
                 
-                cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
+                //cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
                 
                 return mappedFrequency;
             }
         }
         else if (inputNote == rootNote)
         {
-            cout << "note is root, quantized" << endl;
+            //cout << "note is root, quantized" << endl;
             
             return startingFrequency;
         }
@@ -497,8 +559,8 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
                 
                 mappedFrequency = startingFrequency * centsToRatio(difference);
                 
-                cout << "difference: " + to_string(difference) << endl;
-                cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
+                //cout << "difference: " + to_string(difference) << endl;
+                //cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
             }
         }
         else
@@ -509,8 +571,8 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
             
             mappedFrequency = startingFrequency * centsToRatio(difference);
             
-            cout << "total difference: " + to_string(difference) << endl;
-            cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
+            //cout << "total difference: " + to_string(difference) << endl;
+            //cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
         }
         
         return mappedFrequency;
@@ -523,20 +585,20 @@ void PitchMapper::reset(bool notify)
 {
     IntervalMap::resetLastKnownFilePath(parameters.getPluginState());
     
-    currentIntervalMap.reset();
+    atomic_store(&currentIntervalMap, make_shared<IntervalMap>());
 
     setNoteMap(0, notify);
 }
 
 bool PitchMapper::isSubstituted(unsigned int noteNumber)
 {
-    if (auto im = getCurrentIntervalMap().get())
+    if (auto im = getCurrentIntervalMap())
     {
         auto rootNote = getCurrentRootAsSemitones();
         auto inputNote = getNoteAsSemitones(getNoteNumberAsNote(noteNumber));
         auto interval = getInterval(rootNote, inputNote);
         
-        auto& nms = im->noteMaps;
+        auto& nms = im.get()->noteMaps;
         if (nms.find(selectedNoteMapIndex) != nms.end() && nms.at(selectedNoteMapIndex).map.find(interval) != nms.at(selectedNoteMapIndex).map.end() && inputNote != rootNote)
         {
             return true;
@@ -548,5 +610,12 @@ bool PitchMapper::isSubstituted(unsigned int noteNumber)
 
 shared_ptr<IntervalMap> PitchMapper::getCurrentIntervalMap()
 {
-    return atomic_load(&currentIntervalMap);
+    auto im = atomic_load(&currentIntervalMap);
+    
+    if (im->baseMap.map.empty())
+    {
+        return nullptr;
+    }
+    
+    return im;
 }

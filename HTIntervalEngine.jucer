@@ -4,7 +4,7 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn"
               companyName="Ian Hanley" companyEmail="ianhanley100@gmail.com"
               pluginName="HTIntervalEngine" pluginDesc="microtonal synth engine"
-              pluginManufacturer="Ian Hanley" version="1.0.0-beta.8">
+              pluginManufacturer="Ian Hanley" version="1.0.0-beta.8" cppLanguageStandard="20">
   <MAINGROUP id="c8uxtR" name="HTIntervalEngine">
     <GROUP id="{C1219F1E-FF69-9318-B25A-CAEB10629501}" name="Source">
       <GROUP id="{A3D9647E-19D6-63AD-E836-42666F4CC6E3}" name="images">

@@ -119,28 +119,38 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
             
             string append = "";
             
+            // error codes: 0 = success, -1 = file not found, -2 = parsing error, -3 = basemap not found, -4 = invalid basemap, -5 = invalid notemap, -6 = unknown error
+            
             switch (result) {
                 case -1:
                     append = "(file not found)";
-                    
                     break;
-                    
                 case -2:
                     append = "(parsing error)";
-                    
                     break;
-                    
+                case -3:
+                    append = "(basemap not found)";
+                    break;
+                case -4:
+                    append = "(invalid basemap)";
+                    break;
+                case -5:
+                    append = "(invalid notemap)";
+                    break;
+                case -6:
+                    append = "(unknown error)";
+                    break;
                 default:
                     break;
             }
             
             String name;
             
-            auto last = proc.getPitchMapper().getCurrentIntervalMap().get();
+            auto last = proc.getPitchMapper().getCurrentIntervalMap();
             
             if (last)
             {
-                proc.fileTextBuffer = "[" + last->baseMap.name + "]";
+                proc.fileTextBuffer = "[" + last.get()->baseMap.name + "]";
             }
             else
             {
@@ -360,21 +370,23 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
 {
     updateCurrentRootIntervalText();
     
-    if (fileLoadLabel.getText() != processor.fileTextOutput)
+    if (processor.fileTextOutput.isEmpty())
     {
-        fileLoadLabel.setText(processor.fileTextOutput, dontSendNotification);
+        processor.fileTextOutput = processor.FILE_TEXT_BUFFER_EMPTY;
     }
+    
+    fileLoadLabel.setText(processor.fileTextOutput, dontSendNotification);
     
     auto& mapper = processor.getPitchMapper();
     
     if (mapper.onMapChangeAsync.exchange(false))
     {
         auto index = processor.getPitchMapper().getSelectedNoteMapIndex();
-        auto im = processor.getPitchMapper().getCurrentIntervalMap().get();
+        auto im = processor.getPitchMapper().getCurrentIntervalMap();
         
         if (im)
         {
-            auto nms = im->noteMaps;
+            auto nms = im.get()->noteMaps;
             if (nms.find(index) != nms.end())
             {
                 auto map = nms[index];
@@ -398,12 +410,12 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
     
     if (processor.resetOutputText)
     {
-        auto current = processor.getPitchMapper().getCurrentIntervalMap().get();
+        auto current = processor.getPitchMapper().getCurrentIntervalMap();
         
         if (current)
         {
             int index = processor.getPitchMapper().getSelectedNoteMapIndex();
-            auto nms = current->noteMaps;
+            auto nms = current.get()->noteMaps;
             
             if (nms.find(index) != nms.end())
             {
@@ -427,7 +439,7 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
         processor.resetOutputText = false;
     }
     
-    if (ModifierKeys::getCurrentModifiers().isShiftDown() && processor.getPitchMapper().getCurrentIntervalMap().get() &&  !IntervalMap::getLastKnownFilePath(&processor.getPluginState()).getValue().isUndefined())
+    if (ModifierKeys::getCurrentModifiers().isShiftDown() && mapper.getCurrentIntervalMap() &&  !IntervalMap::getLastKnownFilePath(&processor.getPluginState()).getValue().isUndefined())
     {
         intervalMapButton.setButtonText("<reload>");
     }

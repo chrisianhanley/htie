@@ -241,7 +241,7 @@ void PolyphonicSynthesiser::enable()
 
 void PolyphonicSynthesiser::update()
 {
-    createTable();
+    
 }
 
 void PolyphonicSynthesiser::disable()
@@ -266,9 +266,11 @@ void PolyphonicSynthesiser::createTable()
     auto delta = period / size;
     auto angle = 0.0;
     
-    wavetable.setSize(1, totalSize + 1);
+    AudioSampleBuffer buffer = AudioSampleBuffer(1, totalSize + 1);
     
-    auto samples = wavetable.getWritePointer(0);
+    buffer.setSize(1, totalSize + 1);
+    
+    auto samples = buffer.getWritePointer(0);
     
     float sawWeight = *parameters.getMixer().x1;
     
@@ -295,11 +297,11 @@ void PolyphonicSynthesiser::createTable()
         
         float triangle = 2 * abs(2 * ((angle / period) - floor(0.5 + angle / period))) - 1;
         
-        float square = sin(angle) < 0.5 ? 1 : -1;
+        float square = sin(angle) < 0 ? 1 : -1;
         
-        float square1 = sin(angle * 0.5) < 0.5 ? 1 : -1;;
+        float square1 = sin(angle * 0.5) < 0 ? 1 : -1;
         
-        float square2 = sin(angle * 0.25) < 0.5 ? 1 : -1;
+        float square2 = sin(angle * 0.25) < 0 ? 1 : -1;
         
         saw *= sawWeight;
         
@@ -319,6 +321,8 @@ void PolyphonicSynthesiser::createTable()
     }
     
     samples[totalSize] = samples[0];
+    
+    wavetable = buffer;
     
     //cout << "created wavetable with resolution [" + to_string(size) + "]" << endl;
 }
