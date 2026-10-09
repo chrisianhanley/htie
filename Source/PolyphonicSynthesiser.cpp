@@ -6,7 +6,7 @@
 using namespace juce;
 using namespace std;
 
-PolyphonicSynthesiserVoice::PolyphonicSynthesiserVoice(SoundProfile& profile, shared_ptr<juce::AudioSampleBuffer> table) : WavetableVoice(profile, table, 4)
+PolyphonicSynthesiserVoice::PolyphonicSynthesiserVoice(SoundProfile& profile, shared_ptr<juce::AudioSampleBuffer>& table) : WavetableVoice(profile, table, 4)
 {
     if (*soundProfile.parameters.numVoicesParameter < 1)
     {
@@ -212,7 +212,7 @@ PolyphonicSynthesiser::PolyphonicSynthesiser(SynthEngine& engine, PitchMapper& p
 
 PolyphonicSynthesiser::~PolyphonicSynthesiser()
 {
-    atomic_load(&wavetable).reset();
+    atomic_load(&wavetable);
 }
 
 juce::String PolyphonicSynthesiser::getDisplayName()

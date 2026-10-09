@@ -6,7 +6,7 @@
 class WavetableVoice : public juce::SynthesiserVoice
 {
 public:
-    WavetableVoice(SoundProfile& profile, shared_ptr<juce::AudioSampleBuffer> table, unsigned int cycles);
+    WavetableVoice(SoundProfile& profile, shared_ptr<juce::AudioSampleBuffer>& table, unsigned int cycles);
     
     ~WavetableVoice();
     
@@ -30,10 +30,10 @@ public:
     
 protected:
     SoundProfile& soundProfile;
-    
-    shared_ptr<juce::AudioSampleBuffer> table;
 
     std::vector<WavetableOscillator> oscillators;
+    
+    shared_ptr<juce::AudioSampleBuffer>& table;
     
     unsigned int cycles;
 };

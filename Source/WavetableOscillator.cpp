@@ -2,16 +2,16 @@
 
 using namespace std;
 
-WavetableOscillator::WavetableOscillator(shared_ptr<juce::AudioSampleBuffer> table, unsigned int c) : wavetable(table), cycles(c), delta(0), currentIndex(0), lastSample(0)
+WavetableOscillator::WavetableOscillator(shared_ptr<juce::AudioSampleBuffer>& t, unsigned int c) : table(t), cycles(c), delta(0), currentIndex(0), lastSample(0)
 {
-    jassert(table);
+    jassert(t);
     
-    jassert(table->getNumChannels() == 1);
+    jassert(t.get()->getNumChannels() == 1);
 }
 
 void WavetableOscillator::setFrequency(float hz, float sampleRate)
 {
-    float cycle = atomic_load(&wavetable).get()->getNumSamples() / cycles;
+    float cycle = atomic_load(&table).get()->getNumSamples() / cycles;
     
     delta = hz * (cycle / sampleRate);
 }
@@ -23,7 +23,7 @@ float WavetableOscillator::getDelta()
 
 float WavetableOscillator::getNextSample() noexcept
 {
-    auto wt = atomic_load(&wavetable);
+    auto wt = atomic_load(&table);
     
     if (!wt)
     {
@@ -41,7 +41,7 @@ float WavetableOscillator::getNextSample() noexcept
 
     auto frac = currentIndex - (float) index0;
     
-    auto table = wavetable.get()->getReadPointer(0);
+    auto table = wt.get()->getReadPointer(0);
     auto value0 = table[index0];
     auto value1 = table[index1];
     
