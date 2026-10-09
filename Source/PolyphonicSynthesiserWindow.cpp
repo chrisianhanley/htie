@@ -58,11 +58,11 @@ PolyphonicSynthesiserWindow::PolyphonicSynthesiserWindow(PluginParameters& p, Au
     square1Attachment.reset(new SliderAttachment(*state, "x4", square1Slider));
     square2Attachment.reset(new SliderAttachment(*state, "x5", square2Slider));
     
-    sawSlider.onValueChange = [this] { profile.needsUpdating = true; };
-    triangleSlider.onValueChange = [this] { profile.needsUpdating = true; };
-    squareSlider.onValueChange = [this] { profile.needsUpdating = true; };
-    square1Slider.onValueChange = [this] { profile.needsUpdating = true; };
-    square2Slider.onValueChange = [this] { profile.needsUpdating = true; };
+    sawSlider.onValueChange = [this] { profile.update(); };
+    triangleSlider.onValueChange = [this] { profile.update(); };
+    squareSlider.onValueChange = [this] { profile.update(); };
+    square1Slider.onValueChange = [this] { profile.update(); };
+    square2Slider.onValueChange = [this] { profile.update(); };
 
     parent.addAndMakeVisible(&triangleImage);
     parent.addAndMakeVisible(&sawImage);

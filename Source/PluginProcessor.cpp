@@ -465,7 +465,7 @@ void HTIntervalEngineAudioProcessor::setStateInformation(const void* data, int s
                 fileTextOutput = FILE_TEXT_BUFFER_EMPTY;
             }
             
-            //selectedSoundProfile->update();
+            selectedSoundProfile->update();
         }
     }
 }

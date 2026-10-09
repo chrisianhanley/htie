@@ -13,6 +13,10 @@ PolyphonicSynthesiserVoice::PolyphonicSynthesiserVoice(SoundProfile& profile, Au
         jassertfalse;
     }
     
+    auto maxRes = 4096 * 4;
+    
+    table.setSize(1, maxRes + 1);
+    
     setOscillators(12);
 }
 
@@ -55,11 +59,6 @@ bool PolyphonicSynthesiserVoice::canPlaySound(juce::SynthesiserSound* sound)
 
 void PolyphonicSynthesiserVoice::startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound* sound, int currentPitchWheelPosition)
 {
-    if (soundProfile.needsUpdating.exchange(false))
-    {
-        soundProfile.update();
-    }
-    
     auto& engine = soundProfile.synthEngine;
     
     initialFrequency = engine.map(midiNoteNumber);
@@ -241,7 +240,7 @@ void PolyphonicSynthesiser::enable()
 
 void PolyphonicSynthesiser::update()
 {
-    createTable();
+    MessageManager::callAsync([this] { createTable(); });
 }
 
 void PolyphonicSynthesiser::disable()
@@ -263,7 +262,7 @@ void PolyphonicSynthesiser::createTable()
     auto totalSize = size * 4; // size multiplied by num cycles
     
     auto period = MathConstants<double>::twoPi;
-    auto delta = period / (size - 1);
+    auto delta = period / size;
     auto angle = 0.0;
     
     wavetable.setSize(1, totalSize + 1);
@@ -291,9 +290,9 @@ void PolyphonicSynthesiser::createTable()
     
     for (int i = 0; i < totalSize; i++)
     {
-        float saw = (angle / period) - floor(angle / period);
+        float saw = 2 * ((angle / period) - floor(0.5 + angle / period));
         
-        float triangle = 2 * abs((angle / period) - floor(angle / period + 0.5));
+        float triangle = 2 * abs(2 * ((angle / period) - floor(0.5 + angle / period))) - 1;
         
         float square = sgn(sin(angle));
         

@@ -447,11 +447,6 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
         auto& baseMap = im->baseMap;
         auto rootNote = getCurrentRootAsSemitones() + root;
         
-        if (rootNote > 12)
-        {
-            rootNote -= 12;
-        }
-        
         auto inputNote = getNoteAsSemitones(name);
         auto interval = getInterval(rootNote, inputNote);
         

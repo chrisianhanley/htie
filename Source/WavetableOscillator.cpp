@@ -38,7 +38,7 @@ float WavetableOscillator::getNextSample() noexcept
     
     auto currentSample = value0 + frac * (value1 - value0);
     
-    if ((currentIndex += delta) > (float) tableSize)
+    if ((currentIndex += delta) >= (float) tableSize)
     {
         currentIndex -= (float) tableSize;
     }
