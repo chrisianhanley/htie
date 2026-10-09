@@ -207,6 +207,8 @@ bool PolyphonicSynthesiserSound::appliesToChannel(int midiChannel)
 
 PolyphonicSynthesiser::PolyphonicSynthesiser(SynthEngine& engine, PitchMapper& pm, PluginParameters& p, unsigned int i) : SoundProfile(engine, pm, p, i), numVoices(8)
 {
+    wavetable.setSize(1, 4096 * 4 + 1);
+    
     createTable();
 }
 
@@ -234,8 +236,6 @@ void PolyphonicSynthesiser::enable()
     }
     
     synth.addSound(new PolyphonicSynthesiserSound());
-    
-    wavetable.setSize(1, 4096 * 4 + 1);
     
     createTable();
 }
