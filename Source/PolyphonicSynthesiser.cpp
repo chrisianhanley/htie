@@ -13,10 +13,6 @@ PolyphonicSynthesiserVoice::PolyphonicSynthesiserVoice(SoundProfile& profile, Au
         jassertfalse;
     }
     
-    auto maxRes = 4096 * 4;
-    
-    table.setSize(1, maxRes + 1);
-    
     setOscillators(12);
 }
 
@@ -74,14 +70,12 @@ void PolyphonicSynthesiserVoice::startNote(int midiNoteNumber, float velocity, j
     oscillators[0].setFrequency(frequency.getNextValue(), getSampleRate());
     
     auto superimpose = soundProfile.parameters.superimposeParameter;
-    
-    if (!soundProfile.pitchMapper.isSubstituted(midiNoteNumber) && *superimpose != 12)
+
+    if (*superimpose != 12 && !soundProfile.pitchMapper.isSubstituted(midiNoteNumber))
     {
         for (int i = 1; i < *soundProfile.parameters.numVoicesParameter + 1; i++)
         {
             auto super = (int) *superimpose * i;
-            
-            super %= 12;
             
             auto freq = soundProfile.pitchMapper.mapRelative(midiNoteNumber, super, false);
             
@@ -90,6 +84,13 @@ void PolyphonicSynthesiserVoice::startNote(int midiNoteNumber, float velocity, j
             ratios[i - 1] = ratio;
             
             oscillators[i].setFrequency(frequency.getCurrentValue() * ratio, getSampleRate());
+        }
+    }
+    else
+    {
+        for (int i = 1; i < *soundProfile.parameters.numVoicesParameter + 1; i++)
+        {
+            oscillators[i].reset();
         }
     }
 }
@@ -240,7 +241,7 @@ void PolyphonicSynthesiser::enable()
 
 void PolyphonicSynthesiser::update()
 {
-    MessageManager::callAsync([this] { createTable(); });
+    createTable();
 }
 
 void PolyphonicSynthesiser::disable()
@@ -294,11 +295,11 @@ void PolyphonicSynthesiser::createTable()
         
         float triangle = 2 * abs(2 * ((angle / period) - floor(0.5 + angle / period))) - 1;
         
-        float square = sgn(sin(angle));
+        float square = sin(angle) > 0.5 ? 1 : -1;
         
-        float square1 = sgn(sin(angle * 0.5));
+        float square1 = sin(angle * 0.5) > 0.5 ? 1 : -1;;
         
-        float square2 = sgn(sin(angle * 0.25));
+        float square2 = sin(angle * 0.25) > 0.5 ? 1 : -1;
         
         saw *= sawWeight;
         

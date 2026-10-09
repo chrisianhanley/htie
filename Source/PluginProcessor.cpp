@@ -33,7 +33,7 @@ HTIntervalEngineAudioProcessor::HTIntervalEngineAudioProcessor()
     selectedSoundProfile = soundProfiles[0];
     selectedSoundProfile->enable();
     
-    keyboardState.addListener(this);
+    //keyboardState.addListener(this);
 }
 
 HTIntervalEngineAudioProcessor::~HTIntervalEngineAudioProcessor() {}
@@ -110,41 +110,21 @@ SoundProfile* HTIntervalEngineAudioProcessor::setSelectedSoundProfile(int profil
         }
     }
     
-    return soundProfiles[0];
+    if (selectedSoundProfile)
+    {
+        selectedSoundProfile->disable();
+    }
+    
+    selectedSoundProfile = soundProfiles[0];
+    
+    selectedSoundProfile->enable();
+    
+    return selectedSoundProfile;
 }
 
 MidiKeyboardState& HTIntervalEngineAudioProcessor::getKeyboardState()
 {
     return keyboardState;
-}
-
-void HTIntervalEngineAudioProcessor::handleNoteOn(MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity)
-{
-    if (!isAddingFromMidiInput)
-    {
-        auto on = MidiMessage::noteOn(midiChannel, midiNoteNumber, velocity);
-        on.setTimeStamp(Time::getMillisecondCounterHiRes() * 0.001);
-        
-        MessageManager::callAsync([this, on] { generatedEvents.addEvent(on, 0); });
-    }
-}
-
-void HTIntervalEngineAudioProcessor::handleNoteOff(MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity)
-{
-    if (!isAddingFromMidiInput)
-    {
-        auto off = MidiMessage::noteOff(midiChannel, midiNoteNumber);
-        off.setTimeStamp(Time::getMillisecondCounterHiRes() * 0.001);
-        
-        MessageManager::callAsync([this, off] { generatedEvents.addEvent(off, 0); });
-    }
-}
-
-void HTIntervalEngineAudioProcessor::handleIncomingMidiMessage(MidiInput* input, const MidiMessage& message)
-{
-    const ScopedValueSetter<bool> scopedInputFlag(isAddingFromMidiInput, true);
-    
-    keyboardState.processNextMidiEvent(message);
 }
 
 bool HTIntervalEngineAudioProcessor::noteWithinRange(int noteNumber) {
@@ -275,6 +255,8 @@ bool HTIntervalEngineAudioProcessor::isBusesLayoutSupported(const BusesLayout& l
 
 void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
+    keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);
+    
     if (pitchMapper.onMapChangeSync.exchange(false))
     {
         synthEngine.redrawVoices();
@@ -293,10 +275,6 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
         synthEngine.setPedalNote(-1);
         pedalEnabled = false;
     }
-    
-    midiMessages.addEvents(generatedEvents, 0, generatedEvents.getNumEvents(), 0);
-
-    generatedEvents.clear();
     
     for (const auto data : midiMessages)
     {
@@ -323,7 +301,7 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
                 // calculate distance from current midi note to key center to compare to the root interval
                 auto keyInterval = pitchMapper.getInterval(*parameters.keyCenterParameter - 1, currentSemitones);
                 
-                if (pitchMapper.getCurrentIntervalMap() && currentNoteNumber != lastRootNote)
+                if (pitchMapper.getCurrentIntervalMap().get() && currentNoteNumber != lastRootNote)
                 {
                     // cancel operation if current note is identical to the root note, wait for additional input
                     if (keyInterval == pitchMapper.getCurrentRootInterval())
@@ -454,7 +432,7 @@ void HTIntervalEngineAudioProcessor::setStateInformation(const void* data, int s
                 pitchMapper.loadIntervalMap(&file);
             }
             
-            auto map = pitchMapper.getCurrentIntervalMap();
+            auto map = pitchMapper.getCurrentIntervalMap().get();
             
             if (map)
             {

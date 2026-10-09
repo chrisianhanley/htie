@@ -136,7 +136,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
             
             String name;
             
-            auto last = proc.getPitchMapper().getCurrentIntervalMap();
+            auto last = proc.getPitchMapper().getCurrentIntervalMap().get();
             
             if (last)
             {
@@ -370,7 +370,7 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
     if (mapper.onMapChangeAsync.exchange(false))
     {
         auto index = processor.getPitchMapper().getSelectedNoteMapIndex();
-        auto im = processor.getPitchMapper().getCurrentIntervalMap();
+        auto im = processor.getPitchMapper().getCurrentIntervalMap().get();
         
         if (im)
         {
@@ -398,7 +398,7 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
     
     if (processor.resetOutputText)
     {
-        auto current = processor.getPitchMapper().getCurrentIntervalMap();
+        auto current = processor.getPitchMapper().getCurrentIntervalMap().get();
         
         if (current)
         {
@@ -427,7 +427,7 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
         processor.resetOutputText = false;
     }
     
-    if (ModifierKeys::getCurrentModifiers().isShiftDown() && processor.getPitchMapper().getCurrentIntervalMap() &&  !IntervalMap::getLastKnownFilePath(&processor.getPluginState()).getValue().isUndefined())
+    if (ModifierKeys::getCurrentModifiers().isShiftDown() && processor.getPitchMapper().getCurrentIntervalMap().get() &&  !IntervalMap::getLastKnownFilePath(&processor.getPluginState()).getValue().isUndefined())
     {
         intervalMapButton.setButtonText("<reload>");
     }

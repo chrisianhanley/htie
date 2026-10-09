@@ -8,7 +8,7 @@
 /**
 */
 
-class HTIntervalEngineAudioProcessor : public juce::AudioProcessor, public juce::MidiKeyboardState::Listener, public juce::MidiInputCallback
+class HTIntervalEngineAudioProcessor : public juce::AudioProcessor
 {
 public:
     //==============================================================================
@@ -88,17 +88,15 @@ private:
     
     juce::MidiKeyboardState keyboardState;
     
-    juce::MidiBuffer generatedEvents;
-    
     bool isAddingFromMidiInput = false;
     
     int lastRootNote = -1;
     
     bool pedalEnabled = false;
     
-    void handleNoteOn(juce::MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
-    void handleNoteOff(juce::MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
-    void handleIncomingMidiMessage(juce::MidiInput* input, const juce::MidiMessage& message) override;
+    //void handleNoteOn(juce::MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
+    //void handleNoteOff(juce::MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
+    //void handleIncomingMidiMessage(juce::MidiInput* input, const juce::MidiMessage& message) override;
     
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
 };

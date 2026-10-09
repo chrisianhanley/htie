@@ -29,8 +29,6 @@ public:
     
     const unsigned int profileId;
     
-    std::atomic<bool> needsUpdating = false;
-    
     virtual juce::String getDisplayName() = 0;
     
     virtual Window* createWindow(juce::AudioProcessorEditor& e) = 0;

@@ -219,7 +219,7 @@ int PitchMapper::loadIntervalMap(File* json)
     
     atomic_store(&currentIntervalMap, make_shared<IntervalMap>(baseMap, noteMaps));
     
-    auto im = getCurrentIntervalMap();
+    auto im = getCurrentIntervalMap().get();
     
     auto path = IntervalMap::getLastKnownFilePath(parameters.getPluginState());
     path.setValue(json->getFullPathName());
@@ -237,11 +237,13 @@ int PitchMapper::getSelectedNoteMapIndex()
 
 int PitchMapper::setNoteMap(unsigned int index, bool notify)
 {
-    auto im = getCurrentIntervalMap();
+    auto im = getCurrentIntervalMap().get();
     
     if (!im)
     {
-        return 0;
+        selectedNoteMapIndex = 0;
+        
+        return selectedNoteMapIndex;
     }
     
     if (index == selectedNoteMapIndex || im->noteMaps.find(index) == im->noteMaps.end())
@@ -357,7 +359,7 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
 {
     const float startingFrequency = MidiMessage::getMidiNoteInHertz(midiNoteNumber);
     
-    if (auto im = getCurrentIntervalMap())
+    if (auto im = getCurrentIntervalMap().get())
     {
         auto name = getNoteNumberAsNote(midiNoteNumber);
         
@@ -440,12 +442,14 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
 {
     const float startingFrequency = MidiMessage::getMidiNoteInHertz(midiNoteNumber);
     
-    if (auto im = getCurrentIntervalMap())
+    if (auto im = getCurrentIntervalMap().get())
     {
         auto name = getNoteNumberAsNote(midiNoteNumber);
         
         auto& baseMap = im->baseMap;
         auto rootNote = getCurrentRootAsSemitones() + root;
+        
+        rootNote %= 12;
         
         auto inputNote = getNoteAsSemitones(name);
         auto interval = getInterval(rootNote, inputNote);
@@ -526,7 +530,7 @@ void PitchMapper::reset(bool notify)
 
 bool PitchMapper::isSubstituted(unsigned int noteNumber)
 {
-    if (auto im = getCurrentIntervalMap())
+    if (auto im = getCurrentIntervalMap().get())
     {
         auto rootNote = getCurrentRootAsSemitones();
         auto inputNote = getNoteAsSemitones(getNoteNumberAsNote(noteNumber));
@@ -542,7 +546,7 @@ bool PitchMapper::isSubstituted(unsigned int noteNumber)
     return false;
 }
 
-IntervalMap* PitchMapper::getCurrentIntervalMap()
+shared_ptr<IntervalMap> PitchMapper::getCurrentIntervalMap()
 {
-    return atomic_load(&currentIntervalMap).get();
+    return atomic_load(&currentIntervalMap);
 }

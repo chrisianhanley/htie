@@ -47,7 +47,7 @@ public:
     
     bool isSubstituted(unsigned int noteNumber);
     
-    IntervalMap* getCurrentIntervalMap();
+    shared_ptr<IntervalMap> getCurrentIntervalMap();
     
 private:
     PluginParameters& parameters;
