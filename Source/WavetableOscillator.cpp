@@ -29,7 +29,7 @@ float WavetableOscillator::getNextSample(juce::AudioSampleBuffer& wt) noexcept
         
         if (currentIndex >= tableSize)
         {
-            currentIndex -= (float) tableSize;
+            currentIndex = 0;
         }
         
         auto index0 = (unsigned int) currentIndex;
