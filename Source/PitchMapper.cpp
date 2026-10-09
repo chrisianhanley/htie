@@ -28,7 +28,7 @@ unordered_map<String, int> PitchMapper::noteToSemitones = {
     { "F#", 6 }, { "G", 7 }, { "G#", 8 }, { "A", 9 }, { "A#", 10 }, { "B", 11 }
 };
 
-PitchMapper::PitchMapper(PluginParameters& p) : currentIntervalMap(), parameters(p) {}
+PitchMapper::PitchMapper(PluginParameters& p) : parameters(p), currentIntervalMap(nullptr) {}
 
 float PitchMapper::ratioToDecimal(string ratio)
 {
@@ -217,14 +217,16 @@ int PitchMapper::loadIntervalMap(File* json)
     }
     */
     
-    currentIntervalMap = make_shared<IntervalMap>(baseMap, noteMaps);
+    atomic_store(&currentIntervalMap, make_shared<IntervalMap>(baseMap, noteMaps));
     
-    auto path = currentIntervalMap->getLastKnownFilePath(parameters.getPluginState());
+    auto im = getCurrentIntervalMap();
+    
+    auto path = IntervalMap::getLastKnownFilePath(parameters.getPluginState());
     path.setValue(json->getFullPathName());
     
     setNoteMap(0, false);
     
-    cout << "successfully loaded interval map [" + currentIntervalMap->baseMap.name + "]" << endl;
+    cout << "successfully loaded interval map [" + im->baseMap.name + "]" << endl;
     return 0;
 }
 
@@ -235,12 +237,14 @@ int PitchMapper::getSelectedNoteMapIndex()
 
 int PitchMapper::setNoteMap(unsigned int index, bool notify)
 {
-    if (!currentIntervalMap)
+    auto im = getCurrentIntervalMap();
+    
+    if (!im)
     {
         return 0;
     }
     
-    if (index == selectedNoteMapIndex || currentIntervalMap->noteMaps.find(index) == currentIntervalMap->noteMaps.end())
+    if (index == selectedNoteMapIndex || im->noteMaps.find(index) == im->noteMaps.end())
     {
         index = 0;
     }
@@ -353,7 +357,7 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
 {
     const float startingFrequency = MidiMessage::getMidiNoteInHertz(midiNoteNumber);
     
-    if (auto im = atomic_load(&currentIntervalMap))
+    if (auto im = getCurrentIntervalMap())
     {
         auto name = getNoteNumberAsNote(midiNoteNumber);
         
@@ -436,7 +440,7 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
 {
     const float startingFrequency = MidiMessage::getMidiNoteInHertz(midiNoteNumber);
     
-    if (auto im = atomic_load(&currentIntervalMap))
+    if (auto im = getCurrentIntervalMap())
     {
         auto name = getNoteNumberAsNote(midiNoteNumber);
         
@@ -527,7 +531,7 @@ void PitchMapper::reset(bool notify)
 
 bool PitchMapper::isSubstituted(unsigned int noteNumber)
 {
-    if (auto im = atomic_load(&currentIntervalMap))
+    if (auto im = getCurrentIntervalMap())
     {
         auto rootNote = getCurrentRootAsSemitones();
         auto inputNote = getNoteAsSemitones(getNoteNumberAsNote(noteNumber));
@@ -541,4 +545,9 @@ bool PitchMapper::isSubstituted(unsigned int noteNumber)
     }
     
     return false;
+}
+
+IntervalMap* PitchMapper::getCurrentIntervalMap()
+{
+    return atomic_load(&currentIntervalMap).get();
 }

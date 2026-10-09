@@ -102,11 +102,20 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     
     startTimer(50); // since i have to keep GUI updates on the main thread
     
-    intervalMapButton.onClick = [this]
+    auto safe = Component::SafePointer<HTIntervalEngineAudioProcessorEditor>(this);
+    
+    intervalMapButton.onClick = [safe]
     {
-        auto load = [this] (File file, bool reload = false)
+        auto load = [safe] (File file, bool reload = false)
         {
-            int result = processor.getPitchMapper().loadIntervalMap(&file);
+            if (!safe)
+            {
+                return;
+            }
+            
+            auto& proc = safe->processor;
+            
+            int result = proc.getPitchMapper().loadIntervalMap(&file);
             
             string append = "";
             
@@ -127,44 +136,49 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
             
             String name;
             
-            auto last = processor.getPitchMapper().currentIntervalMap;
+            auto last = proc.getPitchMapper().getCurrentIntervalMap();
             
             if (last)
             {
-                processor.fileTextBuffer = "[" + last->baseMap.name + "]";
+                proc.fileTextBuffer = "[" + last->baseMap.name + "]";
             }
             else
             {
-                processor.fileTextBuffer = processor.FILE_TEXT_BUFFER_EMPTY;
+                proc.fileTextBuffer = proc.FILE_TEXT_BUFFER_EMPTY;
             }
             
             if (result == 0)
             {
-                processor.fileTextOutput = reload ? "successfully reloaded " + processor.fileTextBuffer : "successfully loaded " + processor.fileTextBuffer;
+                proc.fileTextOutput = reload ? "successfully reloaded " + proc.fileTextBuffer : "successfully loaded " + proc.fileTextBuffer;
             }
             else
             {
-                processor.fileTextOutput = "file load unsuccessful " + append;
+                proc.fileTextOutput = "file load unsuccessful " + append;
                 
                 if (reload)
                 {
-                    IntervalMap::resetLastKnownFilePath(&processor.getPluginState());
+                    IntervalMap::resetLastKnownFilePath(&proc.getPluginState());
                     
-                    processor.fileTextBuffer = processor.FILE_TEXT_BUFFER_EMPTY;
+                    proc.fileTextBuffer = proc.FILE_TEXT_BUFFER_EMPTY;
                 }
             }
             
-            processor.resetOutputText = false;
+            proc.resetOutputText = false;
             
-            callAfterDelay(2500, [this, last]
+            callAfterDelay(2500, [safe, last]
             {
-                processor.resetOutputText = true;
+                if (!safe)
+                {
+                    return;
+                }
+                
+                safe->processor.resetOutputText = true;
             });
         };
         
-        auto path = IntervalMap::getLastKnownFilePath(&processor.getPluginState());
+        auto path = IntervalMap::getLastKnownFilePath(&safe->processor.getPluginState());
         
-        if (intervalMapButton.getButtonText() == "<reload>" && !path.getValue().isUndefined())
+        if (safe->intervalMapButton.getButtonText() == "<reload>" && !path.getValue().isUndefined())
         {
             load(File(path.getValue()), true);
         }
@@ -172,7 +186,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
         {
             auto folderChooserFlags = FileBrowserComponent::openMode | FileBrowserComponent::canSelectDirectories | FileBrowserComponent::canSelectFiles;
             
-            intervalMapChooser->launchAsync(folderChooserFlags, [this, load] (const FileChooser& chooser)
+            safe->intervalMapChooser->launchAsync(folderChooserFlags, [safe, load] (const FileChooser& chooser)
             {
                 File file(chooser.getResult());
                 
@@ -356,7 +370,7 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
     if (mapper.onMapChangeAsync.exchange(false))
     {
         auto index = processor.getPitchMapper().getSelectedNoteMapIndex();
-        auto im = processor.getPitchMapper().currentIntervalMap;
+        auto im = processor.getPitchMapper().getCurrentIntervalMap();
         
         if (im)
         {
@@ -384,7 +398,7 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
     
     if (processor.resetOutputText)
     {
-        auto current = processor.getPitchMapper().currentIntervalMap;
+        auto current = processor.getPitchMapper().getCurrentIntervalMap();
         
         if (current)
         {
@@ -413,7 +427,7 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
         processor.resetOutputText = false;
     }
     
-    if (ModifierKeys::getCurrentModifiers().isShiftDown() && mapper.currentIntervalMap &&  !IntervalMap::getLastKnownFilePath(&processor.getPluginState()).getValue().isUndefined())
+    if (ModifierKeys::getCurrentModifiers().isShiftDown() && processor.getPitchMapper().getCurrentIntervalMap() &&  !IntervalMap::getLastKnownFilePath(&processor.getPluginState()).getValue().isUndefined())
     {
         intervalMapButton.setButtonText("<reload>");
     }

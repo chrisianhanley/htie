@@ -89,6 +89,8 @@ SoundProfile* HTIntervalEngineAudioProcessor::getSelectedSoundProfile()
 
 SoundProfile* HTIntervalEngineAudioProcessor::setSelectedSoundProfile(int profileId)
 {
+    jassert(soundProfiles.size() > 0);
+    
     for (int i = 0; i < soundProfiles.size(); i++)
     {
         auto p = soundProfiles[i];
@@ -108,9 +110,7 @@ SoundProfile* HTIntervalEngineAudioProcessor::setSelectedSoundProfile(int profil
         }
     }
     
-    jassertfalse;
-    
-    return nullptr;
+    return soundProfiles[0];
 }
 
 MidiKeyboardState& HTIntervalEngineAudioProcessor::getKeyboardState()
@@ -125,7 +125,7 @@ void HTIntervalEngineAudioProcessor::handleNoteOn(MidiKeyboardState* source, int
         auto on = MidiMessage::noteOn(midiChannel, midiNoteNumber, velocity);
         on.setTimeStamp(Time::getMillisecondCounterHiRes() * 0.001);
         
-        generatedEvents.addEvent(on, 0);
+        MessageManager::callAsync([this, on] { generatedEvents.addEvent(on, 0); });
     }
 }
 
@@ -136,7 +136,7 @@ void HTIntervalEngineAudioProcessor::handleNoteOff(MidiKeyboardState* source, in
         auto off = MidiMessage::noteOff(midiChannel, midiNoteNumber);
         off.setTimeStamp(Time::getMillisecondCounterHiRes() * 0.001);
         
-        generatedEvents.addEvent(off, 0);
+        MessageManager::callAsync([this, off] { generatedEvents.addEvent(off, 0); });
     }
 }
 
@@ -323,7 +323,7 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
                 // calculate distance from current midi note to key center to compare to the root interval
                 auto keyInterval = pitchMapper.getInterval(*parameters.keyCenterParameter - 1, currentSemitones);
                 
-                if (pitchMapper.currentIntervalMap && currentNoteNumber != lastRootNote)
+                if (pitchMapper.getCurrentIntervalMap() && currentNoteNumber != lastRootNote)
                 {
                     // cancel operation if current note is identical to the root note, wait for additional input
                     if (keyInterval == pitchMapper.getCurrentRootInterval())
@@ -338,7 +338,8 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
                         auto lastSemitones = pitchMapper.getNoteAsSemitones(pitchMapper.getNoteNumberAsNote(lastRootNote));
                         auto lastInterval = pitchMapper.getInterval(lastSemitones, currentSemitones);
                     
-                        if (pitchMapper.getSelectedNoteMapIndex() != pitchMapper.setNoteMap(lastInterval, true))
+                        auto lastIndex = pitchMapper.getSelectedNoteMapIndex();
+                        if (lastIndex != pitchMapper.setNoteMap(lastInterval, true))
                         {
                             pedalEnabled = true;
                             registerFlag = false;
@@ -453,7 +454,7 @@ void HTIntervalEngineAudioProcessor::setStateInformation(const void* data, int s
                 pitchMapper.loadIntervalMap(&file);
             }
             
-            auto map = pitchMapper.currentIntervalMap;
+            auto map = pitchMapper.getCurrentIntervalMap();
             
             if (map)
             {
@@ -463,6 +464,8 @@ void HTIntervalEngineAudioProcessor::setStateInformation(const void* data, int s
             {
                 fileTextOutput = FILE_TEXT_BUFFER_EMPTY;
             }
+            
+            //selectedSoundProfile->update();
         }
     }
 }

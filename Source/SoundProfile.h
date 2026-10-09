@@ -14,20 +14,12 @@
 #include "SynthEngine.h"
 #include "Window.h"
 
-class SoundProfile
+struct SoundProfile
 {
 public:
     SoundProfile(SynthEngine& engine, PitchMapper& pm, PluginParameters& p, unsigned int i);
     
     virtual ~SoundProfile();
-    
-    virtual juce::String getDisplayName() = 0;
-    
-    virtual Window* createWindow(juce::AudioProcessorEditor& e) = 0;
-    
-    virtual void enable() = 0;
-    virtual void update() = 0;
-    virtual void disable() = 0;
     
     SynthEngine& synthEngine;
     
@@ -36,4 +28,16 @@ public:
     PluginParameters& parameters;
     
     const unsigned int profileId;
+    
+    std::atomic<bool> needsUpdating = false;
+    
+    virtual juce::String getDisplayName() = 0;
+    
+    virtual Window* createWindow(juce::AudioProcessorEditor& e) = 0;
+    
+    virtual void enable() = 0;
+    
+    virtual void update() = 0;
+    
+    virtual void disable() = 0;
 };

@@ -18,6 +18,8 @@ PolyphonicSynthesiserVoice::PolyphonicSynthesiserVoice(SoundProfile& profile, Au
 
 void PolyphonicSynthesiserVoice::setCurrentPlaybackSampleRate(double rate)
 {
+    SynthesiserVoice::setCurrentPlaybackSampleRate(rate);
+    
     if (rate < 1)
     {
         return;
@@ -53,11 +55,16 @@ bool PolyphonicSynthesiserVoice::canPlaySound(juce::SynthesiserSound* sound)
 
 void PolyphonicSynthesiserVoice::startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound* sound, int currentPitchWheelPosition)
 {
+    if (soundProfile.needsUpdating.exchange(false))
+    {
+        soundProfile.update();
+    }
+    
     auto& engine = soundProfile.synthEngine;
     
     initialFrequency = engine.map(midiNoteNumber);
     
-    frequency.setTargetValue(initialFrequency);
+    frequency.setCurrentAndTargetValue(initialFrequency);
     
     gain.setTargetValue(soundProfile.parameters.gainValue);
     
@@ -68,6 +75,7 @@ void PolyphonicSynthesiserVoice::startNote(int midiNoteNumber, float velocity, j
     oscillators[0].setFrequency(frequency.getNextValue(), getSampleRate());
     
     auto superimpose = soundProfile.parameters.superimposeParameter;
+    
     if (!soundProfile.pitchMapper.isSubstituted(midiNoteNumber) && *superimpose != 12)
     {
         for (int i = 1; i < *soundProfile.parameters.numVoicesParameter + 1; i++)
@@ -82,7 +90,7 @@ void PolyphonicSynthesiserVoice::startNote(int midiNoteNumber, float velocity, j
             
             ratios[i - 1] = ratio;
             
-            oscillators[i].setFrequency(frequency.getNextValue() * ratio, getSampleRate());
+            oscillators[i].setFrequency(frequency.getCurrentValue() * ratio, getSampleRate());
         }
     }
 }
@@ -312,5 +320,5 @@ void PolyphonicSynthesiser::createTable()
     
     samples[totalSize] = samples[0];
     
-    cout << "created wavetable with resolution [" + to_string(size) + "]" << endl;
+    //cout << "created wavetable with resolution [" + to_string(size) + "]" << endl;
 }
