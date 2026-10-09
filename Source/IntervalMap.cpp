@@ -24,5 +24,10 @@ Value IntervalMap::getLastKnownFilePath(juce::AudioProcessorValueTreeState* plug
 
 void IntervalMap::resetLastKnownFilePath(juce::AudioProcessorValueTreeState* pluginState)
 {
+    if (!pluginState)
+    {
+        return;
+    }
+    
     getLastKnownFilePath(pluginState).setValue(juce::var::undefined());
 }

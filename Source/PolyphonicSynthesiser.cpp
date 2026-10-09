@@ -16,9 +16,14 @@ PolyphonicSynthesiserVoice::PolyphonicSynthesiserVoice(SoundProfile& profile, Au
     setOscillators(12);
 }
 
-void PolyphonicSynthesiserVoice::prepareToPlay(double sampleRate)
+void PolyphonicSynthesiserVoice::setCurrentPlaybackSampleRate(double rate)
 {
-    frequency.reset(sampleRate, 0.8);
+    if (rate < 1)
+    {
+        return;
+    }
+    
+    frequency.reset(rate, 0.05);
 }
 
 void PolyphonicSynthesiserVoice::setOscillators(unsigned int numVoices)
@@ -123,7 +128,9 @@ void PolyphonicSynthesiserVoice::renderNextBlock(AudioSampleBuffer& outputBuffer
         
         while (numSamples > 0)
         {
-            oscillators[0].setFrequency(frequency.getNextValue(), getSampleRate());
+            auto next = frequency.getNextValue();
+            
+            oscillators[0].setFrequency(next, getSampleRate());
             
             float nextSample = oscillators[0].getNextSample();
             
@@ -133,7 +140,7 @@ void PolyphonicSynthesiserVoice::renderNextBlock(AudioSampleBuffer& outputBuffer
                 {
                     if (oscillators[i].getDelta() != 0)
                     {
-                        oscillators[i].setFrequency(frequency.getNextValue() * ratios[i - 1], getSampleRate());
+                        oscillators[i].setFrequency(next * ratios[i - 1], getSampleRate());
                         
                         nextSample += oscillators[i].getNextSample() * *soundProfile.parameters.mixParameter;
                     }
@@ -232,6 +239,7 @@ void PolyphonicSynthesiser::update()
 void PolyphonicSynthesiser::disable()
 {
     synthEngine.getSynth().clearVoices();
+    synthEngine.getSynth().clearSounds();
 }
 
 template <typename T>

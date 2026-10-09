@@ -52,7 +52,7 @@ AudioProcessorValueTreeState::ParameterLayout HTIntervalEngineAudioProcessor::cr
     layout.add(make_unique<juce::AudioParameterFloat>(ParameterID { "mix", 1 }, "mix", 0, 1, 0.5f));
     layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "numVoices", 1 }, "num voices", 1, 11, 1));
     
-    parameters.getMixer().createLayout(layout);
+    Mixer::createLayout(layout);
     
     return layout;
 }
@@ -275,11 +275,9 @@ bool HTIntervalEngineAudioProcessor::isBusesLayoutSupported(const BusesLayout& l
 
 void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
-    if (pitchMapper.onMapChangeSync)
+    if (pitchMapper.onMapChangeSync.exchange(false))
     {
         synthEngine.redrawVoices();
-        
-        pitchMapper.onMapChangeSync = false;
     }
     
     MidiBuffer filteredMessages;
@@ -446,7 +444,7 @@ void HTIntervalEngineAudioProcessor::setStateInformation(const void* data, int s
             
             pluginState.replaceState(ValueTree::fromXml(*xmlState));
 
-            auto value = pitchMapper.currentIntervalMap->getLastKnownFilePath(&pluginState).getValue();
+            auto value = IntervalMap::getLastKnownFilePath(&pluginState).getValue();
             
             if (!value.isUndefined())
             {

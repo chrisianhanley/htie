@@ -131,16 +131,16 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
             
             if (last)
             {
-                fileTextBuffer = "[" + last->baseMap.name + "]";
+                processor.fileTextBuffer = "[" + last->baseMap.name + "]";
             }
             else
             {
-                fileTextBuffer = processor.FILE_TEXT_BUFFER_EMPTY;
+                processor.fileTextBuffer = processor.FILE_TEXT_BUFFER_EMPTY;
             }
             
             if (result == 0)
             {
-                processor.fileTextOutput = reload ? "successfully reloaded " + fileTextBuffer : "successfully loaded " + fileTextBuffer;
+                processor.fileTextOutput = reload ? "successfully reloaded " + processor.fileTextBuffer : "successfully loaded " + processor.fileTextBuffer;
             }
             else
             {
@@ -148,21 +148,21 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
                 
                 if (reload)
                 {
-                    last->resetLastKnownFilePath(&processor.getPluginState());
+                    IntervalMap::resetLastKnownFilePath(&processor.getPluginState());
                     
-                    fileTextBuffer = processor.FILE_TEXT_BUFFER_EMPTY;
+                    processor.fileTextBuffer = processor.FILE_TEXT_BUFFER_EMPTY;
                 }
             }
             
-            resetOutputText = false;
+            processor.resetOutputText = false;
             
             callAfterDelay(2500, [this, last]
             {
-                resetOutputText = true;
+                processor.resetOutputText = true;
             });
         };
         
-        auto path = processor.getPitchMapper().currentIntervalMap->getLastKnownFilePath(&processor.getPluginState());
+        auto path = IntervalMap::getLastKnownFilePath(&processor.getPluginState());
         
         if (intervalMapButton.getButtonText() == "<reload>" && !path.getValue().isUndefined())
         {
@@ -353,7 +353,7 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
     
     auto& mapper = processor.getPitchMapper();
     
-    if (mapper.onMapChangeAsync)
+    if (mapper.onMapChangeAsync.exchange(false))
     {
         auto index = processor.getPitchMapper().getSelectedNoteMapIndex();
         auto im = processor.getPitchMapper().currentIntervalMap;
@@ -366,25 +366,23 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
                 auto map = nms[index];
                 auto name = map.name;
                 
-                fileTextAppend = " -> " + name + " [" + to_string(index) + "] ";
+                processor.fileTextAppend = " -> " + name + " [" + to_string(index) + "] ";
             }
             else
             {
-                fileTextAppend = "";
+                processor.fileTextAppend = "";
             }
             
-            processor.fileTextOutput = fileTextBuffer + fileTextAppend;
+            processor.fileTextOutput = processor.fileTextBuffer + processor.fileTextAppend;
             
             return;
         }
         
-        fileTextAppend = "";
-        processor.fileTextOutput = fileTextBuffer;
-        
-        mapper.onMapChangeAsync = false;
+        processor.fileTextAppend = "";
+        processor.fileTextOutput = processor.fileTextBuffer;
     }
     
-    if (resetOutputText)
+    if (processor.resetOutputText)
     {
         auto current = processor.getPitchMapper().currentIntervalMap;
         
@@ -398,24 +396,24 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
                 auto map = nms[index];
                 auto name = map.name;
                 
-                fileTextAppend = " -> " + name + " [" + to_string(index) + "] ";
+                processor.fileTextAppend = " -> " + name + " [" + to_string(index) + "] ";
             }
             else
             {
-                fileTextAppend = "";
+                processor.fileTextAppend = "";
             }
         }
         else
         {
-            fileTextAppend = "";
+            processor.fileTextAppend = "";
         }
         
-        processor.fileTextOutput = fileTextBuffer + fileTextAppend;
+        processor.fileTextOutput = processor.fileTextBuffer + processor.fileTextAppend;
         
-        resetOutputText = false;
+        processor.resetOutputText = false;
     }
     
-    if (ModifierKeys::getCurrentModifiers().isShiftDown() && mapper.currentIntervalMap &&  !mapper.currentIntervalMap->getLastKnownFilePath(&processor.getPluginState()).getValue().isUndefined())
+    if (ModifierKeys::getCurrentModifiers().isShiftDown() && mapper.currentIntervalMap &&  !IntervalMap::getLastKnownFilePath(&processor.getPluginState()).getValue().isUndefined())
     {
         intervalMapButton.setButtonText("<reload>");
     }

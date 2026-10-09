@@ -47,7 +47,7 @@ public:
     
     bool isSubstituted(unsigned int noteNumber);
     
-    std::shared_ptr<IntervalMap> currentIntervalMap;
+    std::shared_ptr<const IntervalMap> currentIntervalMap;
     
 private:
     PluginParameters& parameters;

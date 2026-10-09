@@ -69,13 +69,6 @@ void SynthEngine::setCurrentBuffer(juce::MidiBuffer buffer)
 void SynthEngine::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     synth.setCurrentPlaybackSampleRate(sampleRate);
-    
-    for (int i = 0; i < synth.getNumVoices(); i++)
-    {
-        auto voice = synth.getVoice(i);
-        
-        voice->prepareToPlay(sampleRate);
-    }
 }
 
 void SynthEngine::releaseResources() {}

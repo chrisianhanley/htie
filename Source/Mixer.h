@@ -15,7 +15,7 @@
 class Mixer
 {
 public:
-    void createLayout(juce::AudioProcessorValueTreeState::ParameterLayout& layout);
+    static void createLayout(juce::AudioProcessorValueTreeState::ParameterLayout& layout);
     void createReferences(juce::AudioProcessorValueTreeState* state);
     
     std::atomic<float>* x1;

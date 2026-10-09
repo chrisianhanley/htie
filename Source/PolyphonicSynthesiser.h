@@ -16,7 +16,7 @@ public:
     void controllerMoved(int controllerNumber, int newControllerValue) override;
     void renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override;
     void setFrequency(double frequency) override;
-    void prepareToPlay(double sampleRate) override;
+    void setCurrentPlaybackSampleRate(double rate) override;
     void setOscillators(unsigned int n) override;
     
     void reset();

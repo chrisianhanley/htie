@@ -65,6 +65,10 @@ public:
     static const juce::String FILE_TEXT_BUFFER_EMPTY;
     
     juce::String fileTextOutput;
+    juce::String fileTextBuffer = "";
+    juce::String fileTextAppend = "";
+    
+    bool resetOutputText = false;
     
 private:
     //==============================================================================
@@ -88,7 +92,7 @@ private:
     
     bool isAddingFromMidiInput = false;
     
-    int lastRootNote = false;
+    int lastRootNote = -1;
     
     bool pedalEnabled = false;
     
@@ -96,7 +100,7 @@ private:
     void handleNoteOff(juce::MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
     void handleIncomingMidiMessage(juce::MidiInput* input, const juce::MidiMessage& message) override;
     
-    juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
+    static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
 };
 
 using Processor = HTIntervalEngineAudioProcessor;

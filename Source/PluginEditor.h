@@ -30,14 +30,9 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HTIntervalEngineAudioProcessorEditor)
     
-    bool resetOutputText;
-    
     CustomLookAndFeel lookAndFeel;
     
     std::unique_ptr<Window> currentWindow;
-    
-    juce::String fileTextBuffer;
-    juce::String fileTextAppend;
     
     juce::Rectangle<int> boundsToFill;
     

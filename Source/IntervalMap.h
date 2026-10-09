@@ -19,6 +19,6 @@ public:
     Map baseMap;
     unordered_map<int, Map> noteMaps;
     
-    juce::Value getLastKnownFilePath(juce::AudioProcessorValueTreeState*);
-    void resetLastKnownFilePath(juce::AudioProcessorValueTreeState*);
+    static juce::Value getLastKnownFilePath(juce::AudioProcessorValueTreeState*);
+    static void resetLastKnownFilePath(juce::AudioProcessorValueTreeState*);
 };

@@ -235,6 +235,10 @@ int PitchMapper::getSelectedNoteMapIndex()
 
 int PitchMapper::setNoteMap(unsigned int index, bool notify)
 {
+    if (!currentIntervalMap)
+    {
+        return 0;
+    }
     
     if (index == selectedNoteMapIndex || currentIntervalMap->noteMaps.find(index) == currentIntervalMap->noteMaps.end())
     {
@@ -349,11 +353,11 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
 {
     const float startingFrequency = MidiMessage::getMidiNoteInHertz(midiNoteNumber);
     
-    if (currentIntervalMap)
+    if (auto im = atomic_load(&currentIntervalMap))
     {
         auto name = getNoteNumberAsNote(midiNoteNumber);
         
-        auto& baseMap = currentIntervalMap->baseMap;
+        auto& baseMap = im->baseMap;
         auto rootNote = getCurrentRootAsSemitones();
         auto inputNote = getNoteAsSemitones(name);
         auto interval = getInterval(rootNote, inputNote);
@@ -369,7 +373,7 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
         if (*parameters.quantizeRootParameter == 0)
         {
             startCents = intervalToCents12(currentRootInterval);
-            targetCents = baseMap.map[currentRootInterval];
+            targetCents = baseMap.map.at(currentRootInterval);
             difference = targetCents - startCents;
             
             cout << "root difference: " + to_string(difference) << endl;
@@ -390,13 +394,13 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
             return startingFrequency;
         }
         
-        auto& nms = currentIntervalMap->noteMaps;
-        if (useNoteMap && nms.find(selectedNoteMapIndex) != nms.end() && nms[selectedNoteMapIndex].map.find(interval) != nms[selectedNoteMapIndex].map.end())
+        auto& nms = im->noteMaps;
+        if (useNoteMap && nms.find(selectedNoteMapIndex) != nms.end() && nms.at(selectedNoteMapIndex).map.find(interval) != nms.at(selectedNoteMapIndex).map.end())
         {
             if (inputNote != rootNote)
             {
                 startCents = intervalToCents12(interval);
-                targetCents = nms[selectedNoteMapIndex].map[interval];
+                targetCents = nms.at(selectedNoteMapIndex).map.at(interval);
                 difference += targetCents - startCents;
                 
                 mappedFrequency = startingFrequency * centsToRatio(difference);
@@ -408,7 +412,7 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
         else
         {
             startCents = intervalToCents12(interval);
-            targetCents = baseMap.map[interval];
+            targetCents = baseMap.map.at(interval);
             difference += targetCents - startCents;
             
             mappedFrequency = startingFrequency * centsToRatio(difference);
@@ -431,11 +435,12 @@ float PitchMapper::map(int midiNoteNumber, float transposeCents, bool useNoteMap
 float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
 {
     const float startingFrequency = MidiMessage::getMidiNoteInHertz(midiNoteNumber);
-    if (currentIntervalMap)
+    
+    if (auto im = atomic_load(&currentIntervalMap))
     {
         auto name = getNoteNumberAsNote(midiNoteNumber);
         
-        auto& baseMap = currentIntervalMap->baseMap;
+        auto& baseMap = im->baseMap;
         auto rootNote = getCurrentRootAsSemitones() + root;
         
         if (rootNote > 12)
@@ -457,7 +462,7 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
         if (*parameters.quantizeRootParameter == 0)
         {
             startCents = intervalToCents12(currentRootInterval);
-            targetCents = baseMap.map[currentRootInterval];
+            targetCents = baseMap.map.at(currentRootInterval);
             difference = targetCents - startCents;
             
             cout << "root difference: " + to_string(difference) << endl;
@@ -478,13 +483,13 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
             return startingFrequency;
         }
         
-        auto& nms = currentIntervalMap->noteMaps;
-        if (useNoteMap && nms.find(selectedNoteMapIndex) != nms.end() && nms[selectedNoteMapIndex].map.find(interval) != nms[selectedNoteMapIndex].map.end())
+        auto& nms = im->noteMaps;
+        if (useNoteMap && nms.find(selectedNoteMapIndex) != nms.end() && nms.at(selectedNoteMapIndex).map.find(interval) != nms.at(selectedNoteMapIndex).map.end())
         {
             if (inputNote != rootNote)
             {
                 startCents = intervalToCents12(interval);
-                targetCents = nms[selectedNoteMapIndex].map[interval];
+                targetCents = nms.at(selectedNoteMapIndex).map.at(interval);
                 difference += targetCents - startCents;
                 
                 mappedFrequency = startingFrequency * centsToRatio(difference);
@@ -496,7 +501,7 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
         else
         {
             startCents = intervalToCents12(interval);
-            targetCents = baseMap.map[interval];
+            targetCents = baseMap.map.at(interval);
             difference += targetCents - startCents;
             
             mappedFrequency = startingFrequency * centsToRatio(difference);
@@ -513,7 +518,7 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
 
 void PitchMapper::reset(bool notify)
 {
-    currentIntervalMap->resetLastKnownFilePath(parameters.getPluginState());
+    IntervalMap::resetLastKnownFilePath(parameters.getPluginState());
     
     currentIntervalMap.reset();
 
@@ -522,15 +527,14 @@ void PitchMapper::reset(bool notify)
 
 bool PitchMapper::isSubstituted(unsigned int noteNumber)
 {
-    if (currentIntervalMap)
+    if (auto im = atomic_load(&currentIntervalMap))
     {
-        auto baseMap = currentIntervalMap->baseMap;
         auto rootNote = getCurrentRootAsSemitones();
         auto inputNote = getNoteAsSemitones(getNoteNumberAsNote(noteNumber));
         auto interval = getInterval(rootNote, inputNote);
         
-        auto nms = currentIntervalMap->noteMaps;
-        if (nms.find(selectedNoteMapIndex) != nms.end() && nms[selectedNoteMapIndex].map.find(interval) != nms[selectedNoteMapIndex].map.end() && inputNote != rootNote)
+        auto& nms = im->noteMaps;
+        if (nms.find(selectedNoteMapIndex) != nms.end() && nms.at(selectedNoteMapIndex).map.find(interval) != nms.at(selectedNoteMapIndex).map.end() && inputNote != rootNote)
         {
             return true;
         }
