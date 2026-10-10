@@ -32,7 +32,7 @@ public:
     void setPedalNote(int note, int channel);
     void setPedalNote(int note);
     
-    void setCurrentBuffer(juce::MidiBuffer buffer);
+    void setCurrentBuffer(juce::MidiBuffer& buffer);
     
     juce::Synthesiser& getSynth();
     

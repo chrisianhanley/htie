@@ -307,14 +307,18 @@ int PitchMapper::loadIntervalMap(File* json)
     
     atomic_store(&currentIntervalMap, make_shared<IntervalMap>(baseMap, noteMaps));
     
-    auto im = getCurrentIntervalMap();
-    
     auto path = IntervalMap::getLastKnownFilePath(parameters.getPluginState());
+    
     path.setValue(json->getFullPathName());
     
     setNoteMap(0, false);
     
-    cout << "successfully loaded interval map [" + im.get()->baseMap.name + "]" << endl;
+    onMapLoad = true;
+    
+    //auto im = getCurrentIntervalMap();
+    
+    //cout << "successfully loaded interval map [" + im.get()->baseMap.name + "]" << endl;
+    
     return 0;
 }
 

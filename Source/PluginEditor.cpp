@@ -56,7 +56,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     keyCenterSelection.addItem("A", 10);
     keyCenterSelection.addItem("A#", 11);
     keyCenterSelection.addItem("B", 12);
-    //keyCenterSelection.onChange = [this] { updateCurrentRootIntervalText(); };
+    keyCenterSelection.onChange = [this] { processor.pushMTSTuning(); };
     keyCenterAttachment.reset(new ComboBoxAttachment(pluginState, "keyCenter", keyCenterSelection));
     
     // root input range

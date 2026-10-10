@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "PitchMapper.h"
 #include "SoundProfile.h"
+#include "libMTSMaster.h"
 
 //==============================================================================
 /**
@@ -62,6 +63,8 @@ public:
     PitchMapper& getPitchMapper();
     SynthEngine& getSynthEngine();
     
+    void pushMTSTuning();
+    
     static const juce::String FILE_TEXT_EMPTY;
     
     juce::String fileTextOutput;
@@ -93,11 +96,7 @@ private:
     int lastRootNote = -1;
     
     bool pedalEnabled = false;
-    
-    //void handleNoteOn(juce::MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
-    //void handleNoteOff(juce::MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
-    //void handleIncomingMidiMessage(juce::MidiInput* input, const juce::MidiMessage& message) override;
-    
+  
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
 };
 

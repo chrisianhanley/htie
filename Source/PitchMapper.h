@@ -44,6 +44,7 @@ public:
     std::atomic<bool> onMapChangeSync = false;
     std::atomic<bool> onMapChangeAsync = false;
     std::atomic<bool> onRootIntervalChange = false;
+    std::atomic<bool> onMapLoad = false;
     
     bool isSubstituted(unsigned int noteNumber);
     

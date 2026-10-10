@@ -62,7 +62,7 @@ void SynthEngine::setPedalNote(int note)
     pedalNote = note;
 }
 
-void SynthEngine::setCurrentBuffer(juce::MidiBuffer buffer)
+void SynthEngine::setCurrentBuffer(juce::MidiBuffer& buffer)
 {
     currentBuffer = buffer;
 }

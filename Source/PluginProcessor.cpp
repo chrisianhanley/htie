@@ -34,10 +34,27 @@ HTIntervalEngineAudioProcessor::HTIntervalEngineAudioProcessor()
     selectedSoundProfile = soundProfiles[0];
     selectedSoundProfile->enable();
     
-    //keyboardState.addListener(this);
+    if (MTS_CanRegisterMaster())
+    {
+        MTS_RegisterMaster();
+    }
 }
 
-HTIntervalEngineAudioProcessor::~HTIntervalEngineAudioProcessor() {}
+HTIntervalEngineAudioProcessor::~HTIntervalEngineAudioProcessor()
+{
+    MTS_DeregisterMaster();
+}
+
+void HTIntervalEngineAudioProcessor::pushMTSTuning()
+{
+    double freqs[128];
+    for (int i = 0; i < 128; ++i)
+    {
+        freqs[i] = pitchMapper.map(i, true);
+    }
+    
+    MTS_SetNoteTunings(freqs);
+}
 
 AudioProcessorValueTreeState::ParameterLayout HTIntervalEngineAudioProcessor::createLayout()
 {
@@ -258,9 +275,11 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
 {
     keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);
     
-    if (pitchMapper.onMapChangeSync.exchange(false))
+    if (pitchMapper.onMapChangeSync.exchange(false) || pitchMapper.onMapLoad.exchange(false))
     {
         synthEngine.redrawVoices();
+        
+        pushMTSTuning();
     }
     
     MidiBuffer filteredMessages;

@@ -94,6 +94,11 @@
         <FILE id="opF5dz" name="CustomLookAndFeel.h" compile="0" resource="0"
               file="Source/CustomLookAndFeel.h"/>
       </GROUP>
+      <GROUP id="{F3697C70-ADF5-F76B-F962-1200F6751B21}" name="lib">
+        <FILE id="wYR9oz" name="libMTSMaster.cpp" compile="1" resource="0"
+              file="Source/libMTSMaster.cpp"/>
+        <FILE id="JBD8yK" name="libMTSMaster.h" compile="0" resource="0" file="Source/libMTSMaster.h"/>
+      </GROUP>
     </GROUP>
   </MAINGROUP>
   <MODULES>
