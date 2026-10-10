@@ -37,12 +37,40 @@ HTIntervalEngineAudioProcessor::HTIntervalEngineAudioProcessor()
     if (MTS_CanRegisterMaster())
     {
         MTS_RegisterMaster();
+        
+        isMTSMaster = true;
     }
+    
+    pluginState.addParameterListener("keyCenter", this);
+    
+    pluginState.addParameterListener("rootInputRange", this);
+    
+    triggerAsyncUpdate();
 }
 
 HTIntervalEngineAudioProcessor::~HTIntervalEngineAudioProcessor()
 {
-    MTS_DeregisterMaster();
+    if (isMTSMaster)
+    {
+        MTS_DeregisterMaster();
+    }
+    
+    pluginState.removeParameterListener("keyCenter", this);
+    
+    pluginState.removeParameterListener("rootInputRange", this);
+    
+    cancelPendingUpdate();
+}
+
+void HTIntervalEngineAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    triggerAsyncUpdate();
+}
+
+void HTIntervalEngineAudioProcessor::handleAsyncUpdate()
+{
+    pushMTSTuning();
+    filterMTSTuning();
 }
 
 void HTIntervalEngineAudioProcessor::pushMTSTuning()
@@ -54,6 +82,14 @@ void HTIntervalEngineAudioProcessor::pushMTSTuning()
     }
     
     MTS_SetNoteTunings(freqs);
+}
+
+void HTIntervalEngineAudioProcessor::filterMTSTuning()
+{
+    for (int i = 0; i < 128; ++i)
+    {
+        MTS_FilterNote(noteWithinRange(i), (char) i, -1);
+    }
 }
 
 AudioProcessorValueTreeState::ParameterLayout HTIntervalEngineAudioProcessor::createLayout()
@@ -279,7 +315,7 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
     {
         synthEngine.redrawVoices();
         
-        pushMTSTuning();
+        triggerAsyncUpdate();
     }
     
     MidiBuffer filteredMessages;
@@ -466,6 +502,8 @@ void HTIntervalEngineAudioProcessor::setStateInformation(const void* data, int s
             selectedSoundProfile->update();
         }
     }
+    
+    triggerAsyncUpdate();
 }
 
 //==============================================================================

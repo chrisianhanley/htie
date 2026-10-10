@@ -9,7 +9,7 @@
 /**
 */
 
-class HTIntervalEngineAudioProcessor : public juce::AudioProcessor
+class HTIntervalEngineAudioProcessor : public juce::AudioProcessor, juce::AsyncUpdater, juce::AudioProcessorValueTreeState::Listener
 {
 public:
     //==============================================================================
@@ -65,6 +65,8 @@ public:
     
     void pushMTSTuning();
     
+    void filterMTSTuning();
+    
     static const juce::String FILE_TEXT_EMPTY;
     
     juce::String fileTextOutput;
@@ -98,6 +100,12 @@ private:
     bool pedalEnabled = false;
   
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
+    
+    void handleAsyncUpdate() override;
+    
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
+    
+    bool isMTSMaster = false;
 };
 
 using Processor = HTIntervalEngineAudioProcessor;

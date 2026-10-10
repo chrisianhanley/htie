@@ -74,6 +74,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     rootInputRangeSelection.addItem("C5 - B5", 8);
     rootInputRangeSelection.addItem("C6 - B6", 9);
     rootInputRangeSelection.addItem("C7 - B7", 10);
+    rootInputRangeSelection.onChange = [this] { processor.filterMTSTuning(); };
     rootInputRangeAttachment.reset(new ComboBoxAttachment(pluginState, "rootInputRange", rootInputRangeSelection));
     
     // quantize root
