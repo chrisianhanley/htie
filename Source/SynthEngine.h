@@ -16,10 +16,14 @@
 #include "WavetableOscillator.h"
 #include "Mixer.h"
 
-class SynthEngine : public juce::AudioSource
+class SynthEngine : public juce::AudioSource, juce::AudioProcessorValueTreeState::Listener
 {
 public:
+    static const unsigned int NUM_VOICES;
+    
     SynthEngine(PluginParameters& p, PitchMapper& m);
+    
+    ~SynthEngine();
     
     void redrawVoices();
 
@@ -34,13 +38,22 @@ public:
     
     void setCurrentBuffer(juce::MidiBuffer& buffer);
     
-    juce::Synthesiser& getSynth();
-    
     float map(int noteNumber);
     float map(int noteNumber, float transposeCents);
     
+    PluginParameters& getParameters();
+    
+    PitchMapper& getPitchMapper();
+    
+    juce::Synthesiser& getSynth();
+    
+    void createWavetable();
+    
+    void addListeners();
+    
 private:
     int pedalNote;
+    
     int pedalChannel;
     
     PluginParameters& parameters;
@@ -48,5 +61,10 @@ private:
     PitchMapper& pitchMapper;
     
     juce::Synthesiser synth;
+    
     juce::MidiBuffer currentBuffer;
+    
+    juce::AudioSampleBuffer wavetable;
+    
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
 };

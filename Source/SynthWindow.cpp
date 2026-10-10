@@ -1,9 +1,9 @@
-#include "PolyphonicSynthesiserWindow.h"
+#include "SynthWindow.h"
 
 using namespace juce;
 using namespace std;
 
-PolyphonicSynthesiserWindow::PolyphonicSynthesiserWindow(PluginParameters& p, AudioProcessorEditor& parent, PolyphonicSynthesiser& ps) : Window(parent), parameters(p), profile(ps), numModules(6)
+SynthWindow::SynthWindow(PluginParameters& p, SynthEngine& e, AudioProcessorEditor& parent) : Window(parent), parameters(p), engine(e), numModules(6)
 {
     const auto saw = ImageCache::getFromMemory(BinaryData::saw_png, BinaryData::saw_pngSize);
     const auto triangle = ImageCache::getFromMemory(BinaryData::triangle_png, BinaryData::triangle_pngSize);
@@ -52,17 +52,12 @@ PolyphonicSynthesiserWindow::PolyphonicSynthesiserWindow(PluginParameters& p, Au
     square2Slider.setRange(min, max, interval);
     
     auto state = parameters.getPluginState();
+    
     sawAttachment.reset(new SliderAttachment(*state, "x1", sawSlider));
     triangleAttachment.reset(new SliderAttachment(*state, "x2", triangleSlider));
     squareAttachment.reset(new SliderAttachment(*state, "x3", squareSlider));
     square1Attachment.reset(new SliderAttachment(*state, "x4", square1Slider));
     square2Attachment.reset(new SliderAttachment(*state, "x5", square2Slider));
-    
-    sawSlider.onValueChange = [this] { profile.update(); };
-    triangleSlider.onValueChange = [this] { profile.update(); };
-    squareSlider.onValueChange = [this] { profile.update(); };
-    square1Slider.onValueChange = [this] { profile.update(); };
-    square2Slider.onValueChange = [this] { profile.update(); };
 
     parent.addAndMakeVisible(&triangleImage);
     parent.addAndMakeVisible(&sawImage);
@@ -79,12 +74,12 @@ PolyphonicSynthesiserWindow::PolyphonicSynthesiserWindow(PluginParameters& p, Au
     modules = vector<Rectangle<int>>(numModules);
 }
 
-PolyphonicSynthesiserWindow::~PolyphonicSynthesiserWindow()
+SynthWindow::~SynthWindow()
 {
     modules.clear();
 }
 
-void PolyphonicSynthesiserWindow::paint(juce::Graphics& g)
+void SynthWindow::paint(juce::Graphics& g)
 {
     auto borderColour = Colour(250, 149, 115);
     
@@ -99,7 +94,7 @@ void PolyphonicSynthesiserWindow::paint(juce::Graphics& g)
     }
 }
 
-void PolyphonicSynthesiserWindow::resized(Rectangle<int> bounds)
+void SynthWindow::resized(Rectangle<int> bounds)
 {
     jassert(modules.size() == numModules);
 

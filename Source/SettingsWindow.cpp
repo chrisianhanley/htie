@@ -5,6 +5,8 @@ using namespace juce;
 
 SettingsWindow::SettingsWindow(HTIntervalEngineAudioProcessor& p, AudioProcessorEditor& parent) : Window(parent), processor(p)
 {
+    auto state = processor.getPluginParameters().getPluginState();
+    
     auto rfont = CustomFont::getRegularFont(CustomFont::DEFAULT_SIZE);
     
     titleLabel.setLookAndFeel(&lookAndFeel);
@@ -22,37 +24,20 @@ SettingsWindow::SettingsWindow(HTIntervalEngineAudioProcessor& p, AudioProcessor
     resolutionSelection.addItem("1024 samples", 4);
     resolutionSelection.addItem("2048 samples", 5);
     resolutionSelection.addItem("4096 samples", 6);
-    
-    toggleNoteMapLabel.setLookAndFeel(&lookAndFeel);
-    toggleNoteMapLabel.setFont(rfont);
-    toggleNoteMapLabel.setText("toggle note map: ", dontSendNotification);
-    
-    toggleNoteMapButton.setLookAndFeel(&lookAndFeel);
-    
-    /*
-    int id = log2(PluginParameters::wavetableResolutionValue >> 6);
-    
-    resolutionSelection.setSelectedId(id);
-    */
-    
-    resolutionSelection.onChange = [this]
-    {
-        int res = 1 << (resolutionSelection.getSelectedId() + 6);
-        
-        processor.getPluginParameters().wavetableResolutionValue = res;
-        
-        processor.getSelectedSoundProfile()->update();
-    };
-    
-    auto state = processor.getPluginParameters().getPluginState();
     resolutionAttachment.reset(new ComboBoxAttachment(*state, "wavetableResolution", resolutionSelection));
-    toggleNoteMapAttachment.reset(new ButtonAttachment(*state, "toggleNoteMap", toggleNoteMapButton));
+    
+    noteMapPersistsLabel.setLookAndFeel(&lookAndFeel);
+    noteMapPersistsLabel.setFont(rfont);
+    noteMapPersistsLabel.setText("note map persists: ", dontSendNotification);
+    
+    noteMapPersistsButton.setLookAndFeel(&lookAndFeel);
+    toggleNoteMapAttachment.reset(new ButtonAttachment(*state, "noteMapPersists", noteMapPersistsButton));
     
     parent.addAndMakeVisible(&titleLabel);
     parent.addAndMakeVisible(&resolutionLabel);
     parent.addAndMakeVisible(&resolutionSelection);
-    parent.addAndMakeVisible(&toggleNoteMapLabel);
-    parent.addAndMakeVisible(&toggleNoteMapButton);
+    parent.addAndMakeVisible(&noteMapPersistsLabel);
+    parent.addAndMakeVisible(&noteMapPersistsButton);
 }
 
 SettingsWindow::~SettingsWindow()
@@ -67,8 +52,8 @@ void SettingsWindow::resized(Rectangle<int> bounds)
     titleLabel.setVisible(true);
     resolutionLabel.setVisible(true);
     resolutionSelection.setVisible(true);
-    toggleNoteMapLabel.setVisible(true);
-    toggleNoteMapButton.setVisible(true);
+    noteMapPersistsLabel.setVisible(true);
+    noteMapPersistsButton.setVisible(true);
     
     float ratio = parent.getConstrainer()->getFixedAspectRatio();
     float reduction = 0.025;
@@ -90,9 +75,9 @@ void SettingsWindow::resized(Rectangle<int> bounds)
     resolutionLabel.setBounds(buffer.removeFromLeft(width));
     resolutionSelection.setBounds(buffer.removeFromLeft(148));
     
-    width = GlyphArrangement::getStringWidth(toggleNoteMapLabel.getFont(), toggleNoteMapLabel.getText()) + 10;
-    height = toggleNoteMapLabel.getFont().getHeight() + 15;
+    width = GlyphArrangement::getStringWidth(noteMapPersistsLabel.getFont(), noteMapPersistsLabel.getText()) + 10;
+    height = noteMapPersistsLabel.getFont().getHeight() + 15;
     buffer = bounds.removeFromTop(height);
-    toggleNoteMapLabel.setBounds(buffer.removeFromLeft(width));
-    toggleNoteMapButton.setBounds(buffer.removeFromLeft(148));
+    noteMapPersistsLabel.setBounds(buffer.removeFromLeft(width));
+    noteMapPersistsButton.setBounds(buffer.removeFromLeft(148));
 }

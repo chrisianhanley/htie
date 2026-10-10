@@ -3,7 +3,7 @@
 using namespace juce;
 using namespace std;
 
-PluginParameters::PluginParameters() : gainValue(0.0631), wavetableResolutionValue(2048) {}
+PluginParameters::PluginParameters() {}
 
 void PluginParameters::createReferences(juce::AudioProcessorValueTreeState* state)
 {
@@ -14,14 +14,15 @@ void PluginParameters::createReferences(juce::AudioProcessorValueTreeState* stat
     quantizeRootParameter = state->getRawParameterValue("quantizeRoot");
     pedalRootParameter = state->getRawParameterValue("pedalRoot");
     wavetableResolutionParameter = state->getRawParameterValue("wavetableResolution");
-    toggleNoteMapParameter = state->getRawParameterValue("toggleNoteMap");
+    noteMapPersistsParameter = state->getRawParameterValue("noteMapPersists");
     superimposeParameter = state->getRawParameterValue("superimpose");
     mixParameter = state->getRawParameterValue("mix");
     numVoicesParameter = state->getRawParameterValue("numVoices");
+    gainParameter = state->getRawParameterValue("gain");
     
     mixer.createReferences(state);
     
-    jassert(keyCenterParameter && rootInputRangeParameter && quantizeRootParameter && pedalRootParameter && wavetableResolutionParameter && toggleNoteMapParameter && superimposeParameter && mixParameter && numVoicesParameter);
+    jassert(keyCenterParameter && rootInputRangeParameter && quantizeRootParameter && pedalRootParameter && wavetableResolutionParameter && noteMapPersistsParameter && superimposeParameter && mixParameter && numVoicesParameter && gainParameter);
     
     pluginState = state;
 }

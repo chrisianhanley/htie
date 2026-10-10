@@ -1,39 +1,62 @@
 #pragma once
 
 #include "JuceHeader.h"
-#include "SoundProfile.h"
+#include "SynthEngine.h"
 
 class WavetableVoice : public juce::SynthesiserVoice
 {
 public:
-    WavetableVoice(SoundProfile& profile, juce::AudioSampleBuffer& table, unsigned int cycles);
+    WavetableVoice(SynthEngine& engine, juce::AudioSampleBuffer& table, unsigned int cycles);
     
     ~WavetableVoice();
     
-    bool canPlaySound(juce::SynthesiserSound* sound) override = 0;
+    bool canPlaySound(juce::SynthesiserSound* sound) override;
     
-    void startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound* sound, int currentPitchWheelPosition) override = 0;
+    void startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound* sound, int currentPitchWheelPosition) override;
     
-    void stopNote(float velocity, bool allowTailOff) override = 0;
+    void stopNote(float velocity, bool allowTailOff) override;
     
-    void pitchWheelMoved(int newPitchWheelValue) override = 0;
+    void pitchWheelMoved(int newPitchWheelValue) override;
     
-    void controllerMoved(int controllerNumber, int newControllerValue) override = 0;
+    void controllerMoved(int controllerNumber, int newControllerValue) override;
     
-    void renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override = 0;
+    void renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override;
+    
+    void setCurrentPlaybackSampleRate(double rate) override;
 
-    void setFrequency(double frequency) override = 0;
+    void setFrequency(double frequency);
     
     std::vector<WavetableOscillator>& getOscillators();
     
     virtual void setOscillators(unsigned int numVoices);
     
+    void reset();
+    
 protected:
-    SoundProfile& soundProfile;
-
+    SynthEngine& synthEngine;
+    
     std::vector<WavetableOscillator> oscillators;
     
-    juce::AudioSampleBuffer& table;
-    
     unsigned int cycles;
+    
+    float initialFrequency;
+    
+    float level;
+    
+    float tailOff;
+    
+    std::vector<float> ratios;
+    
+    juce::SmoothedValue<float> currentFrequency;
+    
+    juce::SmoothedValue<float> currentGain;
+    
+    juce::AudioSampleBuffer& wavetable;
+};
+
+class WavetableSound : public juce::SynthesiserSound
+{
+    bool appliesToNote(int midiNoteNumber) override;
+    
+    bool appliesToChannel(int midiChannel) override;
 };

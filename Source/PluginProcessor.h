@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 #include "PitchMapper.h"
-#include "SoundProfile.h"
+#include "SynthEngine.h"
 #include "libMTSMaster.h"
 
 //==============================================================================
@@ -51,16 +51,14 @@ public:
     
     bool noteWithinRange(int noteNumber);
     
-    juce::OwnedArray<SoundProfile>& getSoundProfiles();
-    
-    SoundProfile* getSelectedSoundProfile();
-    SoundProfile* setSelectedSoundProfile(int profileId);
-    
     juce::MidiKeyboardState& getKeyboardState();
     
     juce::AudioProcessorValueTreeState& getPluginState();
+    
     PluginParameters& getPluginParameters();
+    
     PitchMapper& getPitchMapper();
+    
     SynthEngine& getSynthEngine();
     
     void pushMTSTuning();
@@ -70,7 +68,9 @@ public:
     static const juce::String FILE_TEXT_EMPTY;
     
     juce::String fileTextOutput;
+    
     juce::String fileTextBuffer = "";
+    
     juce::String fileTextAppend = "";
     
     bool resetOutputText = false;
@@ -81,19 +81,13 @@ private:
     
     juce::AudioProcessorValueTreeState pluginState;
     
+    juce::MidiKeyboardState keyboardState;
+    
     PluginParameters parameters;
     
     PitchMapper pitchMapper;
     
     SynthEngine synthEngine;
-    
-    juce::OwnedArray<SoundProfile> soundProfiles;
-    
-    SoundProfile* selectedSoundProfile;
-    
-    juce::MidiKeyboardState keyboardState;
-    
-    bool isAddingFromMidiInput = false;
     
     int lastRootNote = -1;
     

@@ -2,9 +2,6 @@
 #include "PluginEditor.h"
 #include "Map.h"
 
-#include "PolyphonicSynthesiser.h"
-#include "ElectricPiano.h"
-
 //==============================================================================
 
 using namespace juce;
@@ -28,12 +25,6 @@ HTIntervalEngineAudioProcessor::HTIntervalEngineAudioProcessor()
 {
     parameters.createReferences(&pluginState);
     
-    soundProfiles.add(new PolyphonicSynthesiser(synthEngine, pitchMapper, parameters, 1));
-    soundProfiles.add(new ElectricPiano(synthEngine, pitchMapper, parameters, 2));
-    
-    selectedSoundProfile = soundProfiles[0];
-    selectedSoundProfile->enable();
-    
     if (MTS_CanRegisterMaster())
     {
         MTS_RegisterMaster();
@@ -46,6 +37,10 @@ HTIntervalEngineAudioProcessor::HTIntervalEngineAudioProcessor()
     pluginState.addParameterListener("rootInputRange", this);
     
     triggerAsyncUpdate();
+    
+    synthEngine.createWavetable();
+    
+    synthEngine.addListeners();
 }
 
 HTIntervalEngineAudioProcessor::~HTIntervalEngineAudioProcessor()
@@ -100,11 +95,12 @@ AudioProcessorValueTreeState::ParameterLayout HTIntervalEngineAudioProcessor::cr
     layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "rootInputRange", 1 }, "input range", 1, 10, 5));
     layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "quantizeRoot", 1 }, "quantize", false));
     layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "pedalRoot", 1 }, "pedal", false));
-    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "wavetableResolution", 1 }, "wavetable res", 1, 6, 5));
-    layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "toggleNoteMap", 1 }, "toggle nm", true));
+    layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "wavetableResolution", 1 }, "wavetable resolution", 1, 6, 5));
+    layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "noteMapPersists", 1 }, "nm persists", true));
     layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "superimpose", 1 }, "superimpose", 1, 12, 12));
     layout.add(make_unique<juce::AudioParameterFloat>(ParameterID { "mix", 1 }, "mix", 0, 1, 0.5f));
     layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "numVoices", 1 }, "num voices", 1, 11, 1));
+    layout.add(make_unique<juce::AudioParameterFloat>(ParameterID { "gain", 1 }, "gain", -100, -12, -18));
     
     Mixer::createLayout(layout);
     
@@ -129,51 +125,6 @@ PitchMapper& HTIntervalEngineAudioProcessor::getPitchMapper()
 SynthEngine& HTIntervalEngineAudioProcessor::getSynthEngine()
 {
     return synthEngine;
-}
-
-OwnedArray<SoundProfile>& HTIntervalEngineAudioProcessor::getSoundProfiles()
-{
-    return soundProfiles;
-}
-
-SoundProfile* HTIntervalEngineAudioProcessor::getSelectedSoundProfile()
-{
-    return selectedSoundProfile;
-}
-
-SoundProfile* HTIntervalEngineAudioProcessor::setSelectedSoundProfile(int profileId)
-{
-    jassert(soundProfiles.size() > 0);
-    
-    for (int i = 0; i < soundProfiles.size(); i++)
-    {
-        auto p = soundProfiles[i];
-        
-        if (p && p->profileId == profileId)
-        {
-            if (selectedSoundProfile)
-            {
-                selectedSoundProfile->disable();
-            }
-            
-            p->enable();
-            
-            selectedSoundProfile = p;
-            
-            return p;
-        }
-    }
-    
-    if (selectedSoundProfile)
-    {
-        selectedSoundProfile->disable();
-    }
-    
-    selectedSoundProfile = soundProfiles[0];
-    
-    selectedSoundProfile->enable();
-    
-    return selectedSoundProfile;
 }
 
 MidiKeyboardState& HTIntervalEngineAudioProcessor::getKeyboardState()
@@ -385,7 +336,7 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
                 // register new root note
                 if (registerFlag)
                 {
-                    if (!*parameters.toggleNoteMapParameter)
+                    if (!*parameters.noteMapPersistsParameter)
                     {
                         pitchMapper.setNoteMap(0, true);
                     }
@@ -499,7 +450,7 @@ void HTIntervalEngineAudioProcessor::setStateInformation(const void* data, int s
                 fileTextOutput = FILE_TEXT_EMPTY;
             }
             
-            selectedSoundProfile->update();
+            synthEngine.createWavetable();
         }
     }
     

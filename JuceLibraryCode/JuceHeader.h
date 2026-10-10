@@ -44,7 +44,7 @@ namespace ProjectInfo
 {
     const char* const  projectName    = "HTIntervalEngine";
     const char* const  companyName    = "Ian Hanley";
-    const char* const  versionString  = "0.9.0";
-    const int          versionNumber  = 0x900;
+    const char* const  versionString  = "0.10.0";
+    const int          versionNumber  = 0xa00;
 }
 #endif

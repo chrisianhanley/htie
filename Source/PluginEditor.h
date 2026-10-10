@@ -54,6 +54,7 @@ private:
     std::unique_ptr<ComboBoxAttachment> rootInputRangeAttachment;
     std::unique_ptr<ButtonAttachment> quantizeRootAttachment;
     std::unique_ptr<ButtonAttachment> pedalRootAttachment;
+    std::unique_ptr<SliderAttachment> gainAttachment;
     
     std::unique_ptr<juce::FileChooser> intervalMapChooser;
     juce::TextButton intervalMapButton;
@@ -61,8 +62,6 @@ private:
     juce::Label fileLoadLabel;
 
     juce::TextButton settingsButton;
-    juce::ComboBox soundSelection;
-    juce::Label soundSelectionLabel;
     
     juce::Label superimposeLabel;
     juce::ComboBox superimposeSelection;

@@ -1,24 +1,26 @@
 #pragma once
 
 #include "Window.h"
-#include "PolyphonicSynthesiser.h"
 #include "PluginProcessor.h"
+#include "SynthEngine.h"
 
 using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
 
-class PolyphonicSynthesiserWindow : public Window
+class SynthWindow : public Window
 {
 public:
-    PolyphonicSynthesiserWindow(PluginParameters& p, juce::AudioProcessorEditor& parent, PolyphonicSynthesiser& ps);
-    ~PolyphonicSynthesiserWindow();
+    SynthWindow(PluginParameters& p, SynthEngine& engine, juce::AudioProcessorEditor& parent);
+    
+    ~SynthWindow();
     
     void paint(juce::Graphics& g) override;
+    
     void resized(juce::Rectangle<int> bounds) override;
 
 private:
     PluginParameters& parameters;
     
-    PolyphonicSynthesiser& profile;
+    SynthEngine& engine;
     
     const unsigned int numModules;
     

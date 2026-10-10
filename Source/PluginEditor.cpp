@@ -3,8 +3,7 @@
 #include "Map.h"
 #include "CustomFont.h"
 
-#include "PolyphonicSynthesiserWindow.h"
-#include "ElectricPianoWindow.h"
+#include "SynthWindow.h"
 
 using namespace juce;
 using namespace std;
@@ -31,13 +30,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     volumeSlider.setPopupDisplayEnabled(true, false, this);
     volumeSlider.setRange(-100, -12, 0.1);
     volumeSlider.setSkewFactor(5);
-    volumeSlider.setValue(Decibels::gainToDecibels(processor.getPluginParameters().gainValue.load()));
-    volumeSlider.onValueChange = [this]
-    {
-        auto gain = Decibels::decibelsToGain((double) volumeSlider.getValue());
-        
-        processor.getPluginParameters().gainValue = gain;
-    };
+    gainAttachment.reset(new SliderAttachment(pluginState, "gain", volumeSlider));
     
     // key center
     keyCenterLabel.setLookAndFeel(&lookAndFeel);
@@ -217,12 +210,9 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     {
         if (dynamic_cast<SettingsWindow*>(currentWindow.get()))
         {
-            auto id = soundSelection.getSelectedId();
-            auto profile = processor.setSelectedSoundProfile(id);
-            
             settingsButton.setButtonText("<settings>");
             
-            setCurrentWindow(profile->createWindow(*this));
+            setCurrentWindow(new SynthWindow(processor.getPluginParameters(), processor.getSynthEngine(), *this));
         }
         else
         {
@@ -230,35 +220,6 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
             
             setCurrentWindow(new SettingsWindow(processor, *this));
         }
-    };
-    
-    // sound selection
-    auto& profiles = processor.getSoundProfiles();
-    
-    for (int i = 0; i < profiles.size(); i++)
-    {
-        auto p = profiles[i];
-        
-        soundSelection.addItem(p->getDisplayName(), p->profileId);
-    }
-    
-    soundSelection.setLookAndFeel(&lookAndFeel);
-
-    if (processor.getSelectedSoundProfile() && !currentWindow)
-    {
-        auto profile = processor.getSelectedSoundProfile();
-        
-        soundSelection.setSelectedId(profile->profileId);
-        
-        setCurrentWindow(profile->createWindow(*this));
-    }
-    
-    soundSelection.onChange = [this]
-    {
-        auto id = soundSelection.getSelectedId();
-        auto profile = processor.setSelectedSoundProfile(id);
-
-        setCurrentWindow(profile->createWindow(*this));
     };
     
     superimposeLabel.setLookAndFeel(&lookAndFeel);
@@ -325,7 +286,6 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     addAndMakeVisible(&intervalMapButton);
     addAndMakeVisible(&fileLoadLabel);
     addAndMakeVisible(&settingsButton);
-    addAndMakeVisible(&soundSelection);
     addAndMakeVisible(&superimposeLabel);
     addAndMakeVisible(&superimposeSelection);
     addAndMakeVisible(&mixLabel);
@@ -346,6 +306,11 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     setResizeLimits(min * ratio, min, max * ratio, max);
     
     getConstrainer()->setFixedAspectRatio(ratio);
+    
+    if (!currentWindow)
+    {
+        setCurrentWindow(new SynthWindow(processor.getPluginParameters(), processor.getSynthEngine(), *this));
+    }
 }
 
 HTIntervalEngineAudioProcessorEditor::~HTIntervalEngineAudioProcessorEditor()
@@ -523,11 +488,7 @@ void HTIntervalEngineAudioProcessorEditor::resized()
     boundsToFill = bounds;
     
     buffer1 = bounds.removeFromTop(margin1);
-    buffer1.translate(0, 1);
-    
-    soundSelection.setBounds(buffer1.reduced(200, 0));
-    
-    buffer1.translate(-1, 0);
+    buffer1.translate(-1, 1);
     
     settingsButton.setBounds(buffer1.removeFromRight(GlyphArrangement::getStringWidth(rootInputRangeLabel.getFont(), settingsButton.getButtonText()) + 20));
     

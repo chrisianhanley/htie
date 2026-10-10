@@ -27,10 +27,11 @@ private:
     
     juce::ComboBox resolutionSelection;
     
-    juce::Label toggleNoteMapLabel;
+    juce::Label noteMapPersistsLabel;
     
-    juce::ToggleButton toggleNoteMapButton;
+    juce::ToggleButton noteMapPersistsButton;
     
     std::unique_ptr<ComboBoxAttachment> resolutionAttachment;
+    
     std::unique_ptr<ButtonAttachment> toggleNoteMapAttachment;
 };
