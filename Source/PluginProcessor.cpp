@@ -94,7 +94,7 @@ AudioProcessorValueTreeState::ParameterLayout HTIntervalEngineAudioProcessor::cr
     layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "keyCenter", 1 }, "key", 1, 12, 1));
     layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "rootInputRange", 1 }, "input range", 1, 10, 5));
     layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "quantizeRoot", 1 }, "quantize", false));
-    layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "pedalRoot", 1 }, "pedal", false));
+    layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "drone", 1 }, "drone", false));
     layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "wavetableResolution", 1 }, "wavetable resolution", 1, 6, 5));
     layout.add(make_unique<juce::AudioParameterBool>(ParameterID { "noteMapPersists", 1 }, "nm persists", true));
     layout.add(make_unique<juce::AudioParameterInt>(ParameterID { "superimpose", 1 }, "superimpose", 1, 12, 12));
@@ -273,7 +273,7 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
     
     auto pedalNote = synthEngine.getPedalNote();
     
-    if (*parameters.pedalRootParameter == 0 && pedalNote > -1)
+    if (*parameters.droneParameter == 0 && pedalNote > -1)
     {
         auto off = MidiMessage::noteOff(synthEngine.getPedalChannel(), pedalNote);
         
@@ -345,7 +345,7 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
                     lastRootNote = currentNoteNumber;
                 }
                 
-                if (*parameters.pedalRootParameter == 1 && pedalFlag && currentNoteNumber != pedalNote)
+                if (*parameters.droneParameter == 1 && pedalFlag && currentNoteNumber != pedalNote)
                 {
                     if (pedalNote > -1)
                     {

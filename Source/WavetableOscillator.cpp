@@ -6,7 +6,7 @@ WavetableOscillator::WavetableOscillator(unsigned int c) : cycles(c), delta(0), 
 
 void WavetableOscillator::setFrequency(float hz, float numSamples, float sampleRate)
 {
-    float cycle = numSamples / cycles;
+    float cycle = (numSamples - 1) / cycles;
     
     delta = hz * (cycle / sampleRate);
 }

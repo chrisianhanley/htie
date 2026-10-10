@@ -11,7 +11,7 @@ public:
     std::atomic<float>* keyCenterParameter = nullptr;
     std::atomic<float>* rootInputRangeParameter = nullptr;
     std::atomic<float>* quantizeRootParameter = nullptr;
-    std::atomic<float>* pedalRootParameter = nullptr;
+    std::atomic<float>* droneParameter = nullptr;
     std::atomic<float>* wavetableResolutionParameter = nullptr;
     std::atomic<float>* noteMapPersistsParameter = nullptr;
     

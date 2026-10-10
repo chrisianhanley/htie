@@ -12,7 +12,7 @@ void PluginParameters::createReferences(juce::AudioProcessorValueTreeState* stat
     keyCenterParameter = state->getRawParameterValue("keyCenter");
     rootInputRangeParameter = state->getRawParameterValue("rootInputRange");
     quantizeRootParameter = state->getRawParameterValue("quantizeRoot");
-    pedalRootParameter = state->getRawParameterValue("pedalRoot");
+    droneParameter = state->getRawParameterValue("drone");
     wavetableResolutionParameter = state->getRawParameterValue("wavetableResolution");
     noteMapPersistsParameter = state->getRawParameterValue("noteMapPersists");
     superimposeParameter = state->getRawParameterValue("superimpose");
@@ -22,7 +22,7 @@ void PluginParameters::createReferences(juce::AudioProcessorValueTreeState* stat
     
     mixer.createReferences(state);
     
-    jassert(keyCenterParameter && rootInputRangeParameter && quantizeRootParameter && pedalRootParameter && wavetableResolutionParameter && noteMapPersistsParameter && superimposeParameter && mixParameter && numVoicesParameter && gainParameter);
+    jassert(keyCenterParameter && rootInputRangeParameter && quantizeRootParameter && droneParameter && wavetableResolutionParameter && noteMapPersistsParameter && superimposeParameter && mixParameter && numVoicesParameter && gainParameter);
     
     pluginState = state;
 }

@@ -42,18 +42,18 @@ private:
     juce::Label keyCenterLabel;
     juce::Label rootInputRangeLabel;
     juce::Label quantizeRootLabel;
-    juce::Label pedalRootLabel;
+    juce::Label droneLabel;
     juce::Label currentRootIntervalLabel;
 
     juce::ComboBox keyCenterSelection;
     juce::ComboBox rootInputRangeSelection;
     juce::ToggleButton quantizeRootToggle;
-    juce::ToggleButton pedalRootToggle;
+    juce::ToggleButton droneToggle;
     
     std::unique_ptr<ComboBoxAttachment> keyCenterAttachment;
     std::unique_ptr<ComboBoxAttachment> rootInputRangeAttachment;
     std::unique_ptr<ButtonAttachment> quantizeRootAttachment;
-    std::unique_ptr<ButtonAttachment> pedalRootAttachment;
+    std::unique_ptr<ButtonAttachment> droneAttachment;
     std::unique_ptr<SliderAttachment> gainAttachment;
     
     std::unique_ptr<juce::FileChooser> intervalMapChooser;

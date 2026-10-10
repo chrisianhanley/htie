@@ -78,11 +78,11 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     quantizeRootAttachment.reset(new ButtonAttachment(pluginState, "quantizeRoot", quantizeRootToggle));
     
     // pedal root
-    pedalRootLabel.setLookAndFeel(&lookAndFeel);
-    pedalRootToggle.setLookAndFeel(&lookAndFeel);
-    pedalRootLabel.setFont(rfont);
-    pedalRootLabel.setText("pedal: ", NotificationType::dontSendNotification);
-    pedalRootAttachment.reset(new ButtonAttachment(pluginState, "pedalRoot", pedalRootToggle));
+    droneLabel.setLookAndFeel(&lookAndFeel);
+    droneToggle.setLookAndFeel(&lookAndFeel);
+    droneLabel.setFont(rfont);
+    droneLabel.setText("drone: ", NotificationType::dontSendNotification);
+    droneAttachment.reset(new ButtonAttachment(pluginState, "drone", droneToggle));
     
     // current root
     currentRootIntervalLabel.setLookAndFeel(&lookAndFeel);
@@ -280,8 +280,8 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
     addAndMakeVisible(&rootInputRangeSelection);
     addAndMakeVisible(&quantizeRootLabel);
     addAndMakeVisible(&quantizeRootToggle);
-    addAndMakeVisible(&pedalRootLabel);
-    addAndMakeVisible(&pedalRootToggle);
+    addAndMakeVisible(&droneLabel);
+    addAndMakeVisible(&droneToggle);
     addAndMakeVisible(&currentRootIntervalLabel);
     addAndMakeVisible(&intervalMapButton);
     addAndMakeVisible(&fileLoadLabel);
@@ -466,8 +466,8 @@ void HTIntervalEngineAudioProcessorEditor::resized()
     rootInputRangeSelection.setBounds(buffer1.removeFromLeft(95));
     quantizeRootLabel.setBounds(buffer1.removeFromLeft(GlyphArrangement::getStringWidth(quantizeRootLabel.getFont(), quantizeRootLabel.getText()) + 10));
     quantizeRootToggle.setBounds(buffer1.removeFromLeft(margin1));
-    pedalRootLabel.setBounds(buffer1.removeFromLeft(GlyphArrangement::getStringWidth(pedalRootLabel.getFont(), pedalRootLabel.getText()) + 10));
-    pedalRootToggle.setBounds(buffer1.removeFromLeft(margin1));
+    droneLabel.setBounds(buffer1.removeFromLeft(GlyphArrangement::getStringWidth(droneLabel.getFont(), droneLabel.getText()) + 10));
+    droneToggle.setBounds(buffer1.removeFromLeft(margin1));
     
     superimposeLabel.setBounds(buffer2.removeFromLeft(GlyphArrangement::getStringWidth(superimposeLabel.getFont(), superimposeLabel.getText()) + 10));
     superimposeSelection.setBounds(buffer2.removeFromLeft(60));

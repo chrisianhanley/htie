@@ -228,6 +228,7 @@ float SynthEngine::map(int noteNumber)
     if (pedal)
     {
         auto name = pitchMapper.getNoteNumberAsNote(noteNumber);
+        
         auto current = pitchMapper.getNoteAsSemitones(name);
         
         if (*parameters.keyCenterParameter - 1 > current)
@@ -246,6 +247,7 @@ float SynthEngine::map(int noteNumber, float transposeCents)
     if (pedal)
     {
         auto name = pitchMapper.getNoteNumberAsNote(noteNumber);
+        
         auto current = pitchMapper.getNoteAsSemitones(name);
         
         if (*parameters.keyCenterParameter - 1 > current)
