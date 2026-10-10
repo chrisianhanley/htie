@@ -77,6 +77,11 @@ void HTIntervalEngineAudioProcessor::pushMTSTuning()
     }
     
     MTS_SetNoteTunings(freqs);
+    
+    if (pitchMapper.getCurrentIntervalMap())
+    {
+        MTS_SetScaleName(pitchMapper.getCurrentIntervalMap().get()->baseMap.name.c_str());
+    }
 }
 
 void HTIntervalEngineAudioProcessor::filterMTSTuning()
