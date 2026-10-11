@@ -456,67 +456,65 @@ float PitchMapper::map(int midiNoteNumber, bool useNoteMap)
         auto name = getNoteNumberAsNote(midiNoteNumber);
         
         auto& baseMap = im.get()->baseMap;
+        
         auto rootNote = getCurrentRootAsSemitones();
+        
         auto inputNote = getNoteAsSemitones(name);
+        
         auto interval = getInterval(rootNote, inputNote);
         
         float startCents = 0;
+        
         float targetCents = 0;
+        
         float difference = 0;
         
         float mappedFrequency = startingFrequency;
-        
-        //cout << "mapped " + name + " to " + to_string(interval) << endl;
-        
+       
         if (*parameters.quantizeRootParameter == 0)
         {
             startCents = intervalToCents12(currentRootInterval);
+            
             targetCents = baseMap.map.at(currentRootInterval);
+            
             difference = targetCents - startCents;
-            
-            //cout << "root difference: " + to_string(difference) << endl;
-            
+        
             if (inputNote == rootNote)
             {
                 mappedFrequency = startingFrequency * centsToRatio(difference);
-                
-                //cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
-                
+         
                 return mappedFrequency;
             }
         }
         else if (inputNote == rootNote)
         {
-            //cout << "note is root, quantized" << endl;
-            
             return startingFrequency;
         }
         
         auto& nms = im->noteMaps;
+        
         if (useNoteMap && nms.find(selectedNoteMapIndex) != nms.end() && nms.at(selectedNoteMapIndex).map.find(interval) != nms.at(selectedNoteMapIndex).map.end())
         {
             if (inputNote != rootNote)
             {
                 startCents = intervalToCents12(interval);
+                
                 targetCents = nms.at(selectedNoteMapIndex).map.at(interval);
+                
                 difference += targetCents - startCents;
                 
                 mappedFrequency = startingFrequency * centsToRatio(difference);
-                
-                //cout << "difference: " + to_string(difference) << endl;
-                //cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
             }
         }
         else
         {
             startCents = intervalToCents12(interval);
+            
             targetCents = baseMap.map.at(interval);
+            
             difference += targetCents - startCents;
             
             mappedFrequency = startingFrequency * centsToRatio(difference);
-            
-            //cout << "total difference: " + to_string(difference) << endl;
-            //cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
         }
         
         return mappedFrequency;
@@ -539,70 +537,67 @@ float PitchMapper::mapRelative(int midiNoteNumber, int root, bool useNoteMap)
         auto name = getNoteNumberAsNote(midiNoteNumber);
         
         auto& baseMap = im.get()->baseMap;
+        
         auto rootNote = getCurrentRootAsSemitones() + root;
         
         rootNote %= 12;
         
         auto inputNote = getNoteAsSemitones(name);
+        
         auto interval = getInterval(rootNote, inputNote);
         
         float startCents = 0;
+        
         float targetCents = 0;
+        
         float difference = 0;
         
         float mappedFrequency = startingFrequency;
         
-        //cout << "mapped " + name + " to " + to_string(interval) << endl;
-        
         if (*parameters.quantizeRootParameter == 0)
         {
             startCents = intervalToCents12(currentRootInterval);
-            targetCents = baseMap.map.at(currentRootInterval);
-            difference = targetCents - startCents;
             
-            //cout << "root difference: " + to_string(difference) << endl;
+            targetCents = baseMap.map.at(currentRootInterval);
+            
+            difference = targetCents - startCents;
             
             if (inputNote == rootNote)
             {
                 mappedFrequency = startingFrequency * centsToRatio(difference);
-                
-                //cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
                 
                 return mappedFrequency;
             }
         }
         else if (inputNote == rootNote)
         {
-            //cout << "note is root, quantized" << endl;
-            
             return startingFrequency;
         }
         
         auto& nms = im.get()->noteMaps;
+        
         if (useNoteMap && nms.find(selectedNoteMapIndex) != nms.end() && nms.at(selectedNoteMapIndex).map.find(interval) != nms.at(selectedNoteMapIndex).map.end())
         {
             if (inputNote != rootNote)
             {
                 startCents = intervalToCents12(interval);
+                
                 targetCents = nms.at(selectedNoteMapIndex).map.at(interval);
+                
                 difference += targetCents - startCents;
                 
                 mappedFrequency = startingFrequency * centsToRatio(difference);
-                
-                //cout << "difference: " + to_string(difference) << endl;
-                //cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
             }
         }
         else
         {
             startCents = intervalToCents12(interval);
+            
             targetCents = baseMap.map.at(interval);
+            
             difference += targetCents - startCents;
             
             mappedFrequency = startingFrequency * centsToRatio(difference);
-            
-            //cout << "total difference: " + to_string(difference) << endl;
-            //cout << "starting frequency: " + to_string(MidiMessage::getMidiNoteInHertz(midiNoteNumber)) + ", mapped frequency: " + to_string(mappedFrequency) << endl;
         }
         
         return mappedFrequency;
@@ -625,10 +620,13 @@ bool PitchMapper::isSubstituted(unsigned int noteNumber)
     if (auto im = getCurrentIntervalMap())
     {
         auto rootNote = getCurrentRootAsSemitones();
+        
         auto inputNote = getNoteAsSemitones(getNoteNumberAsNote(noteNumber));
+        
         auto interval = getInterval(rootNote, inputNote);
         
         auto& nms = im.get()->noteMaps;
+        
         if (nms.find(selectedNoteMapIndex) != nms.end() && nms.at(selectedNoteMapIndex).map.find(interval) != nms.at(selectedNoteMapIndex).map.end() && inputNote != rootNote)
         {
             return true;

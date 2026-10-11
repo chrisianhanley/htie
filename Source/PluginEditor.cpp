@@ -148,16 +148,16 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
             
             if (last)
             {
-                proc.fileTextBuffer = "[" + last.get()->baseMap.name + "]";
+                safe->fileTextBuffer = "[" + last.get()->baseMap.name + "]";
             }
             else
             {
-                proc.fileTextBuffer = proc.FILE_TEXT_EMPTY;
+                safe->fileTextBuffer = proc.FILE_TEXT_EMPTY;
             }
             
             if (result == 0)
             {
-                proc.fileTextOutput = reload ? "successfully reloaded " + proc.fileTextBuffer : "successfully loaded " + proc.fileTextBuffer;
+                proc.fileTextOutput = reload ? "successfully reloaded " + safe->fileTextBuffer : "successfully loaded " + safe->fileTextBuffer;
             }
             else
             {
@@ -167,7 +167,7 @@ HTIntervalEngineAudioProcessorEditor::HTIntervalEngineAudioProcessorEditor(Proce
                 {
                     IntervalMap::resetLastKnownFilePath(&proc.getPluginState());
                     
-                    proc.fileTextBuffer = proc.FILE_TEXT_EMPTY;
+                    safe->fileTextBuffer = proc.FILE_TEXT_EMPTY;
                 }
             }
             
@@ -362,20 +362,20 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
                 auto map = nms[index];
                 auto name = map.name;
                 
-                processor.fileTextAppend = " -> " + name + " [" + to_string(index) + "] ";
+                fileTextAppend = " -> " + name + " [" + to_string(index) + "] ";
             }
             else
             {
-                processor.fileTextAppend = "";
+                fileTextAppend = "";
             }
             
-            processor.fileTextOutput = processor.fileTextBuffer + processor.fileTextAppend;
+            processor.fileTextOutput = fileTextBuffer + fileTextAppend;
             
             return;
         }
         
-        processor.fileTextAppend = "";
-        processor.fileTextOutput = processor.fileTextBuffer;
+        fileTextAppend = "";
+        processor.fileTextOutput = fileTextBuffer;
     }
     
     if (processor.resetOutputText)
@@ -392,19 +392,19 @@ void HTIntervalEngineAudioProcessorEditor::timerCallback()
                 auto map = nms[index];
                 auto name = map.name;
                 
-                processor.fileTextAppend = " -> " + name + " [" + to_string(index) + "] ";
+                fileTextAppend = " -> " + name + " [" + to_string(index) + "] ";
             }
             else
             {
-                processor.fileTextAppend = "";
+                fileTextAppend = "";
             }
         }
         else
         {
-            processor.fileTextAppend = "";
+            fileTextAppend = "";
         }
         
-        processor.fileTextOutput = processor.fileTextBuffer + processor.fileTextAppend;
+        processor.fileTextOutput = fileTextBuffer + fileTextAppend;
         
         processor.resetOutputText = false;
     }

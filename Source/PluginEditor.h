@@ -27,6 +27,10 @@ public:
 
 private:
     Processor& processor;
+    
+    juce::String fileTextBuffer = "";
+    
+    juce::String fileTextAppend = "";
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HTIntervalEngineAudioProcessorEditor)
     

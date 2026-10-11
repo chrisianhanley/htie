@@ -271,7 +271,10 @@ void HTIntervalEngineAudioProcessor::processBlock(AudioBuffer<float>& buffer, Mi
     {
         synthEngine.redrawVoices();
         
-        triggerAsyncUpdate();
+        if (isMTSMaster)
+        {
+            triggerAsyncUpdate();
+        }
     }
     
     MidiBuffer filteredMessages;

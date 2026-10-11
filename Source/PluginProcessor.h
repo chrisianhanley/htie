@@ -69,10 +69,6 @@ public:
     
     juce::String fileTextOutput;
     
-    juce::String fileTextBuffer = "";
-    
-    juce::String fileTextAppend = "";
-    
     bool resetOutputText = false;
     
 private:
